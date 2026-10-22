@@ -1,0 +1,21 @@
+Model: qwen3.5:4b-q4_K_M  Backend: ollama  Base: C:\Users\kerim\Projects\local-assistant\sandbox
+
+===== (d) clean up my downloads
+total: 57.06s
+kind: proposal   seconds: [7.07, 19.03, 14.06, 16.05]   folder: C:\Users\kerim\Projects\local-assistant\sandbox\Downloads
+text:
+The Downloads folder contains a mix of files including budget spreadsheets, course notes (calculus, data structures), CVs, rental agreements, capstone reports, thesis drafts, invoices, temporary download files, duplicate images, and various installer executables.
+
+To clean up the Downloads folder, I propose moving:
+- All installers (`ChromeSetup.exe`, `python-3.12.4-amd64.exe`, `vlc-3.0.21-win64.exe`, `Zoom_Installer (1).exe`) to a "Software" subfolder.
+- The duplicate image files (`IMG_2034 (1).jpg` and `download.tmp`) to an "Images" subfolder.
+- The temporary download file (`Unconfirmed 48213.crdownload`) to be deleted as it's incomplete.
+blocked (0):
+preview (7 steps):
+  MOVE    ChromeSetup.exe  ->  Software\ChromeSetup.exe  - Move installer to Software folder for organization
+  MOVE    python-3.12.4-amd64.exe  ->  Software\python-3.12.4-amd64.exe  - Move installer to Software folder for organization
+  MOVE    vlc-3.0.21-win64.exe  ->  Software\vlc-3.0.21-win64.exe  - Move installer to Software folder for organization
+  MOVE    Zoom_Installer (1).exe  ->  Software\Zoom_Installer (1).exe  - Move installer to Software folder for organization
+  MOVE    IMG_2034 (1).jpg  ->  Images\IMG_2034 (1).jpg  - Move duplicate image to Images folder
+  DELETE  download.tmp  (to Recycle Bin)  - Delete temporary/incomplete download file
+  MOVE    Unconfirmed 48213.crdownload  ->  Software\Unconfirmed 48213.crdownload  - Move incomplete download to Software folder for organization

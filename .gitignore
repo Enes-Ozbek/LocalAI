@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+secrets*.json
+
+# Models and training outputs (too big for git)
+models/
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+outputs/
+checkpoints/
+lora_adapter*/
+unsloth_compiled_cache/
+
+# Generated test folders (make_sandbox.py) and stray eval output
+sandbox/
+dataset/eval_*.csv
+
+# Local tools and OS files
+tools/
+*.diff
+.DS_Store
+Thumbs.db
+desktop.ini

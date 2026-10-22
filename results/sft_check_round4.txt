@@ -1,0 +1,13 @@
+PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can be used.
+To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
+To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
+examples 12 skipped {'too long or misaligned': 0}
+token lengths [837, 2047, 831, 1314, 831, 1937, 830, 1612, 846, 854, 831, 1803]
+trained tokens [31, 521, 28, 84, 31, 417, 30, 365, 51, 52, 30, 435]
+len min/median/max 830 850.0 2047
+render paths ['direct', 'direct', 'direct', 'direct', 'direct', 'direct', 'direct', 'direct', 'direct', 'direct', 'direct', 'direct']
+gen prompt tail: 'anything."}\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n'
+tool call render: '<tool_call>\n<function=inspect_folder>\n<parameter=folder>\nDownloads/New folder1\n</parameter>\n</function>\n</tool_call><|im_end|>\n'
+example 2 trained part: 'This folder has 9 files:\n- 2 Operating Systems lecture slides (CSE 301, lectures 7 and 8)\n- 1 Linear Algebra homework solution (MATH 201)\n- 1 Turkcell phone bill from September 2026 (scan_0031.pdf)\n- 3 photos from 2 September 2026; IMG_4411 (1).jpg is an exact copy of IMG_4411.jpg\n- 1 Steam installe'
+gen prompt suffix after base: '<|im_start|>assistant\n<think>\n\n</think>\n\n'
+raw full after base: '<|im_start|>assistant\n<think>\n\n</think>\n\nThis folder has 9 files:\n- 2 Operating Systems lecture slides (CSE 301, lecture'

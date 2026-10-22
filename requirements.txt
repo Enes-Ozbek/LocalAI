@@ -1,0 +1,5 @@
+ollama>=0.5
+send2trash
+pypdf
+python-docx
+pillow
