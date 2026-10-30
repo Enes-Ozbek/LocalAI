@@ -52,7 +52,7 @@ Without `--base`, folder names mean your real folders (C:\Users\you\Downloads an
 python app.py --base sandbox        # opens http://127.0.0.1:8765 in your browser
 ```
 
-The same assistant with a window: pick an example or type a request in the box at the top. A plan is shown like
+The same assistant with a window: pick an example or type a request in the box at the bottom. A plan is shown like
 a folder window: on the left the folder now, one row per file with a checkbox and where it goes; on the right the
 folder after the plan, in big folder and file icons (new folders marked "New", renamed files "Renamed", deletes on
 one "Going to the Recycle Bin" line). Double-click a folder to look inside, click anything to see why. The right side

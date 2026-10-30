@@ -46,6 +46,7 @@
 html, body { margin: 0; min-height: 100%; }
 [hidden] { display: none !important; }
 
+body.fa { min-height: 100vh; display: flex; flex-direction: column; }
 .fa { font-family: var(--font-sans); font-size: 15px; line-height: 22px; color: var(--text); background: var(--bg); }
 .fa *, .fa *::before, .fa *::after { box-sizing: border-box; }
 .fa :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -84,7 +85,11 @@ html, body { margin: 0; min-height: 100%; }
 .fa-check:indeterminate::after { content: ""; position: absolute; left: 3px; top: 6.75px; width: 9px; height: 2px; background: var(--on-accent); }
 
 /* request box */
-.fa-request { display: flex; gap: var(--space-2); flex: 1; max-width: 620px; min-width: 0; }
+.fa-request { display: flex; gap: var(--space-2); flex: 1; min-width: 0; }
+
+/* request box: along the bottom of the window, lined up with the page */
+.fa-compose { position: sticky; bottom: 0; z-index: 1; border-top: 1px solid var(--line); background: var(--surface); }
+.fa-compose .inner { max-width: 1100px; margin: 0 auto; padding: 12px var(--space-5) 14px; }
 .fa-input { flex: 1; min-width: 0; height: 40px; padding: 0 14px; font: inherit; color: var(--text); background: var(--surface);
   border: 1px solid var(--line-strong); border-radius: var(--radius-md); }
 .fa-input::placeholder { color: var(--text-muted); opacity: 1; }
@@ -110,7 +115,7 @@ html, body { margin: 0; min-height: 100%; }
 .fa-ic .bin { fill: none; stroke: var(--delete); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* the page */
-.fv-wrap { max-width: 1100px; margin: 0 auto; padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+.fv-wrap { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
 .fv-head p { margin: 2px 0 0; }
 .fv-cols { display: grid; grid-template-columns: 340px 28px minmax(0, 1fr); align-items: stretch; }
 .fv-arrow { display: grid; place-items: center; color: var(--text-muted); font-size: 18px; }
@@ -196,22 +201,18 @@ html, body { margin: 0; min-height: 100%; }
 .fv-note b { font-weight: 600; }
 
 @media (max-width: 820px) {
-  .fa-top { flex-wrap: wrap; padding: 10px var(--space-4); }
-  .fa-request { order: 5; flex-basis: 100%; max-width: none; }
+  .fa-top { padding: 10px var(--space-4); gap: var(--space-3); }
+  .fa-compose .inner { padding: 10px var(--space-4) 12px; }
   .fv-wrap { padding: var(--space-4); }
   .fv-cols { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
   .fv-arrow { transform: rotate(90deg); }
 }
+@media (max-width: 520px) { #sandbox { display: none; } }
 </style>
 </head>
 <body class="fa">
 <header class="fa-top">
   <span class="name">Folder Assistant</span>
-  <form class="fa-request" id="form">
-    <input class="fa-input" id="request" autocomplete="off" aria-label="Request"
-           placeholder="e.g. organise downloads, don’t delete anything">
-    <button class="fa-btn" id="send" type="submit">Send</button>
-  </form>
   <span class="grow"></span>
   <span class="fa-small fa-muted" id="sandbox" hidden
         title="Folder names point at the test sandbox: “Downloads” means sandbox\Downloads, not your real folder.">Test sandbox</span>
@@ -219,6 +220,13 @@ html, body { margin: 0; min-height: 100%; }
   <button class="fa-theme" id="theme" type="button"></button>
 </header>
 <main class="fv-wrap" id="main"></main>
+<footer class="fa-compose"><div class="inner">
+  <form class="fa-request" id="form">
+    <input class="fa-input" id="request" autocomplete="off" aria-label="Request"
+           placeholder="e.g. organise downloads, don’t delete anything">
+    <button class="fa-btn" id="send" type="submit">Send</button>
+  </form>
+</div></footer>
 
 <script>
 const TOKEN = "__TOKEN__";
@@ -377,7 +385,7 @@ function pause(ms) { return new Promise(r => setTimeout(r, ms)); }
 function result(r) {
   const seconds = r.seconds.length ? "answered in " + r.seconds.reduce((a, b) => a + b, 0).toFixed(1) + " s" : "";
   if (r.kind === "ask") {
-    show(head("Which folder do you mean?", "Type it in the request box at the top, for example “organise downloads”."),
+    show(head("Which folder do you mean?", "Type it in the request box at the bottom, for example “organise downloads”."),
       say("Assistant", r.text, r.folder, seconds));
     input.select(); input.focus();
     return;
