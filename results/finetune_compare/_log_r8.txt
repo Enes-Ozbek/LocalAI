@@ -1,0 +1,41 @@
+0.00.809.531 I llama_prepare_model_devices: using device Vulkan0 (AMD Radeon RX 5600 XT) (unknown id) - 5334 MiB free
+0.02.062.973 I load_tensors: offloaded 34/34 layers to GPU
+0.03.756.282 I srv  llama_server: listening on http://127.0.0.1:8080
+=== r8_finetuned (llama-server)
+(a) proposal steps= 8 blocked= 0 seconds=[6.72, 19.71]
+(b) proposal steps=19 blocked= 0 seconds=[1.34, 44.75]
+(c) explain  steps= 0 blocked= 0 seconds=[1.54, 5.53]
+(d) proposal steps=18 blocked= 0 seconds=[1.28, 42.99]
+(e) proposal steps=18 blocked= 0 seconds=[1.34, 43.47]
+(f) ask      steps= 0 blocked= 0 seconds=[2.27]
+(g) refuse   steps= 0 blocked= 0 seconds=[2.12]
+(h) proposal steps= 7 blocked= 0 seconds=[1.33, 17.88]
+evaluate test:
+Routing (model alone): 7/7
+Routing (with app):    7/7
+Per-file agreement:    54/93 (58%)
+Grouping (mean ARI):   0.40
+Rule violations:       4 (in 3 records)
+Needed a retry:        0/5 records
+Time: routing median 1.5s, decisions median 45.7s
+evaluate seed_examples:
+Routing (model alone): 6/7
+Routing (with app):    6/7
+Per-file agreement:    29/34 (85%)
+Grouping (mean ARI):   0.88
+Rule violations:       2 (in 1 records)
+Needed a retry:        0/5 records
+Time: routing median 1.6s, decisions median 18.7s
+llama-server stopped
+=== r8_ollama_base (Ollama, default backend)
+(a) proposal steps= 7 blocked= 0 seconds=[8.51, 19.78, 18.15]
+(b) proposal steps=14 blocked= 0 seconds=[8.36, 51.22]
+(c) explain  steps= 0 blocked= 0 seconds=[8.24, 10.26]
+(d) proposal steps=12 blocked= 0 seconds=[7.79, 49.17]
+(e) proposal steps=19 blocked= 0 seconds=[8.17, 47.71]
+(f) ask      steps= 0 blocked= 0 seconds=[8.09]
+(g) refuse   steps= 0 blocked= 0 seconds=[9.01]
+(h) proposal steps= 9 blocked= 0 seconds=[7.69, 11.03, 16.86]
+NAME                 ID              SIZE      PROCESSOR    CONTEXT    RUNNER      UNTIL               
+qwen3.5:4b-q4_K_M    d8b0f5e9760c    3.4 GB    100% GPU     8192       llamacpp    29 minutes from now    
+=== done

@@ -258,7 +258,34 @@ REQUESTS = {
     "refuse": (5, [
         "organize C:\\Windows\\System32", "clean up Program Files", "delete everything in C:\\Windows",
         "what's the weather tomorrow", "write my homework for me", "organize my AppData folder"]),
+    # One file the user names ({file}), and what to do with it
+    "one_file": (10, [
+        "delete {file} from {f}", "remove {file} in {f}", "can you delete {file} in {f}",
+        "move {file} in {f} into a folder called {sub}", "put {file} from {f} in a {sub} folder",
+        "rename {file} in {f} to {new}", "in {f}, rename {file} to {new}"]),
+    "move_elsewhere": (5, [  # to another of the user's folders ({top}), not a subfolder
+        "move {file} from {f} to {top}", "move {file} to {top} from {f}", "put {file} from {f} into my {top} folder"]),
 }
+NEW_SUBFOLDERS = ["Important", "To print", "Archive", "Keep", "Old", "University", "Bills", "Work"]
+NEW_SUFFIXES = ["final", "old", "backup", "keep", "important", "to_print", "2026"]
+
+
+def one_file(r, scenario, template):
+    """Fills {file}, {sub}, {new} and {top} for a request about one named file."""
+    files = [s for s in scenario["facts"]["files"] if "duplicate_of" not in s]
+    s = r.choice(files)
+    name = s["file"]
+    stem, dot, ext = name.rpartition(".")
+    if not dot:
+        stem, ext = name, ""
+    said = name
+    if len(stem) >= 5 and not stem.isalpha() and r.random() < 0.25:
+        said = stem  # 'move report_final to documents': the app matches a name without its extension too
+    new = f"{stem}_{r.choice(NEW_SUFFIXES)}" + (f".{ext}" if dot else "")
+    top_folder = scenario["folder"].split("/")[0]
+    tops = [t for t in (["Pictures", "Desktop"] if s["type"] == "images" else ["Documents", "Desktop"]) if t != top_folder]
+    return (template.replace("{file}", said).replace("{sub}", r.choice(NEW_SUBFOLDERS))
+            .replace("{new}", new).replace("{top}", r.choice(tops) if r.random() < 0.6 else r.choice(tops).lower()))
 
 
 def folder_mention(r, folder):
@@ -278,8 +305,10 @@ def make_requests(r, scenario, k):
         template = r.choice(REQUESTS[rtype][1])
         if rtype == "organize_rule" and "course" in template and scenario["persona"] != "student":
             template = "sort {f} by file type"
+        if rtype in ("one_file", "move_elsewhere"):
+            template = one_file(r, scenario, template)
         text = template.replace("{f}", folder_mention(r, scenario["folder"])).replace("my my", "my")
-        if r.random() < 0.15:  # some typos, like real users
+        if r.random() < 0.15 and rtype not in ("one_file", "move_elsewhere"):  # some typos, like real users
             text = text.replace("organize", "organzie").replace("files", "fiels")
         out.append({"task_id": f"{scenario['scenario_id']}-{i}", "request_type": rtype, "user": text})
     return out

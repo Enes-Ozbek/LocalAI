@@ -19,7 +19,8 @@ def main():
     ap.add_argument("--model", default=llm.MODEL)
     args = ap.parse_args()
     base = Path(args.base).resolve()
-    print(f"Model: {args.model}   Folders under: {base}\nType a request, 'undo' or 'quit'.")
+    print(f"Model: {llm.label(args.model)}   Folders under: {base}\nType a request, 'undo' or 'quit'.")
+    session = agent.Session(base, args.model)
 
     while True:
         try:
@@ -32,10 +33,12 @@ def main():
             print(executor.undo_last())
             continue
 
-        r = agent.run(text, base=base, model=args.model)
+        r = session.run(text)
         print(f"\nAssistant ({' + '.join(f'{s}s' for s in r.seconds)}):")
         if r.text:
             print(r.text)
+        for m in r.matches:
+            print(f"  {m['path']}  ({m['modified']}, {m['size_kb']} KB)  {m['why']}")
         if r.kind != "proposal":
             continue
         for b in r.blocked:

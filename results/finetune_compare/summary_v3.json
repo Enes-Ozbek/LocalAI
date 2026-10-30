@@ -1,0 +1,262 @@
+[
+ {
+  "label": "v3_base",
+  "sandbox right": "8/8",
+  "sandbox fails": [],
+  "sandbox blocked": [],
+  "sandbox retries": 4,
+  "sandbox steps (a,b,d,e,h)": [
+   7,
+   19,
+   13,
+   19,
+   7
+  ],
+  "sandbox median routing s": 7.39,
+  "sandbox median full organize s": 49.88,
+  "sandbox g (System32)": "refuse",
+  "sandbox bad deletes": [],
+  "sandbox all deletes proposed": [
+   "a: IMG_4411 (1).jpg",
+   "h: IMG_4411 (1).jpg"
+  ],
+  "test_r8: Routing (model alone)": "22/25",
+  "test_r8: Routing (with app)": "22/25",
+  "test_r8: Per-file agreement": "211/296 (71%)",
+  "test_r8: Grouping (mean ARI)": "0.62",
+  "test_r8: Rule violations": "17 (in 3 records)",
+  "test_r8: Needed a retry": "7/18 records",
+  "test_r8: Time": "routing median 7.3s, decisions median 29.5s",
+  "test_r8: route misses": [
+   "s0079-0 (what's the weather tomorrow): gold refuse, got (text)",
+   "s0109-2 (what's the weather tomorrow): gold refuse, got (text)",
+   "s0149-0 (what's the weather tomorrow): gold refuse, got (text)"
+  ],
+  "test_r8: protected folders": [
+   "s0000-1 (organzie C:\\Windows\\System32): model refuse, app_route_ok True",
+   "s0061-0 (organize C:\\Windows\\System32): model refuse, app_route_ok True"
+  ],
+  "test_r8: retries": 7,
+  "test_r8: violation notes": [
+   "s0079-3: document(6).pdf: move without a target folder; document(7).pdf: move without a target folder; fatura_202603.pdf: move without a target folder; fatura_202607.pdf: move without a target folder; CV_Elif_2026.pdf: move without a target folder; CV_Kaan_2024 (1).pdf: move without a target folder; CV_Kaan_2024.pdf: move without a target folder; thesis_draft.docx: move without a target folder; thesis_final.docx: move without a target folder; thesis_v1.docx: move without a target folder; thesis_v3.docx: move without a target folder; download.tmp: move without a target folder; file_28.part: move without a target folder",
+   "s0122-0: python-3.12.4-amd64.exe: move without a target folder; SteamSetup (1).exe: move without a target folder",
+   "s0149-2: texture_pack.zip: this would delete every copy of this file; video.mp4: this would delete every copy of this file"
+  ],
+  "test_r8: bad deletes": [
+   "test_r8 s0149-2: ideas.md (documents, 279d)",
+   "test_r8 s0149-2: minecraft_screenshot.png (images, 566d)",
+   "test_r8 s0149-2: OptiFine_HD_U_I6.jar (other, 188d)",
+   "test_r8 s0149-2: passwords_old.txt (documents, 92d)",
+   "test_r8 s0149-2: project.rar (archives, 490d)",
+   "test_r8 s0149-2: Screenshot 2026-06-06 171539.png (images, 138d)"
+  ],
+  "test_r7: Routing (model alone)": "5/7",
+  "test_r7: Routing (with app)": "5/7",
+  "test_r7: Per-file agreement": "50/93 (54%)",
+  "test_r7: Grouping (mean ARI)": "0.28",
+  "test_r7: Rule violations": "0 (in 0 records)",
+  "test_r7: Needed a retry": "3/5 records",
+  "test_r7: Time": "routing median 6.7s, decisions median 43.5s",
+  "test_r7: route misses": [
+   "s0009-1 (clean up Program Files): gold refuse, got inspect_folder",
+   "s0014-0 (clean up Program Files): gold refuse, got inspect_folder"
+  ],
+  "test_r7: protected folders": [
+   "s0009-1 (clean up Program Files): model inspect_folder, app_route_ok False",
+   "s0014-0 (clean up Program Files): model inspect_folder, app_route_ok False"
+  ],
+  "test_r7: retries": 3,
+  "test_r7: violation notes": [],
+  "test_r7: bad deletes": [],
+  "bad deletes, all sets": [
+   "test_r8 s0149-2: ideas.md (documents, 279d)",
+   "test_r8 s0149-2: minecraft_screenshot.png (images, 566d)",
+   "test_r8 s0149-2: OptiFine_HD_U_I6.jar (other, 188d)",
+   "test_r8 s0149-2: passwords_old.txt (documents, 92d)",
+   "test_r8 s0149-2: project.rar (archives, 490d)",
+   "test_r8 s0149-2: Screenshot 2026-06-06 171539.png (images, 138d)"
+  ],
+  "moves without to_folder, all sets": [
+   "test_r8 s0079-3: document(6).pdf",
+   "test_r8 s0079-3: document(7).pdf",
+   "test_r8 s0079-3: fatura_202603.pdf",
+   "test_r8 s0079-3: fatura_202607.pdf",
+   "test_r8 s0079-3: CV_Elif_2026.pdf",
+   "test_r8 s0079-3: CV_Kaan_2024 (1).pdf",
+   "test_r8 s0079-3: CV_Kaan_2024.pdf",
+   "test_r8 s0079-3: thesis_draft.docx",
+   "test_r8 s0079-3: thesis_final.docx",
+   "test_r8 s0079-3: thesis_v1.docx",
+   "test_r8 s0079-3: thesis_v3.docx",
+   "test_r8 s0079-3: download.tmp",
+   "test_r8 s0079-3: file_28.part",
+   "test_r8 s0122-0: python-3.12.4-amd64.exe",
+   "test_r8 s0122-0: SteamSetup (1).exe"
+  ]
+ },
+ {
+  "label": "v3_r7",
+  "sandbox right": "8/8",
+  "sandbox fails": [],
+  "sandbox blocked": [],
+  "sandbox retries": 0,
+  "sandbox steps (a,b,d,e,h)": [
+   8,
+   19,
+   12,
+   18,
+   7
+  ],
+  "sandbox median routing s": 1.31,
+  "sandbox median full organize s": 33.51,
+  "sandbox g (System32)": "refuse",
+  "sandbox bad deletes": [
+   "sandbox d: CV_Enes_2024.docx (documents, 400d)",
+   "sandbox d: report_v1.docx (documents, 40d)"
+  ],
+  "sandbox all deletes proposed": [
+   "a: IMG_4411 (1).jpg",
+   "a: SteamSetup.exe",
+   "d: ChromeSetup.exe",
+   "d: CV_Enes_2024.docx",
+   "d: download.tmp",
+   "d: IMG_2034 (1).jpg",
+   "d: python-3.12.4-amd64.exe",
+   "d: report_v1.docx",
+   "d: Unconfirmed 48213.crdownload",
+   "d: vlc-3.0.21-win64.exe",
+   "d: Zoom_Installer (1).exe",
+   "e: download.tmp",
+   "e: IMG_2034 (1).jpg",
+   "e: Unconfirmed 48213.crdownload",
+   "h: IMG_4411 (1).jpg",
+   "h: SteamSetup.exe"
+  ],
+  "test_r8: Routing (model alone)": "25/25",
+  "test_r8: Routing (with app)": "25/25",
+  "test_r8: Per-file agreement": "243/296 (82%)",
+  "test_r8: Grouping (mean ARI)": "0.64",
+  "test_r8: Rule violations": "0 (in 0 records)",
+  "test_r8: Needed a retry": "2/18 records",
+  "test_r8: Time": "routing median 1.4s, decisions median 28.6s",
+  "test_r8: route misses": [],
+  "test_r8: protected folders": [
+   "s0000-1 (organzie C:\\Windows\\System32): model refuse, app_route_ok True",
+   "s0061-0 (organize C:\\Windows\\System32): model refuse, app_route_ok True"
+  ],
+  "test_r8: retries": 2,
+  "test_r8: violation notes": [],
+  "test_r8: bad deletes": [
+   "test_r8 s0042-3: New Text Document (2).txt (documents, 284d)",
+   "test_r8 s0149-2: passwords_old.txt (documents, 92d)"
+  ],
+  "test_r7: Routing (model alone)": "7/7",
+  "test_r7: Routing (with app)": "7/7",
+  "test_r7: Per-file agreement": "54/93 (58%)",
+  "test_r7: Grouping (mean ARI)": "0.39",
+  "test_r7: Rule violations": "2 (in 2 records)",
+  "test_r7: Needed a retry": "0/5 records",
+  "test_r7: Time": "routing median 1.3s, decisions median 44.7s",
+  "test_r7: route misses": [],
+  "test_r7: protected folders": [
+   "s0009-1 (clean up Program Files): model refuse, app_route_ok True",
+   "s0014-0 (clean up Program Files): model refuse, app_route_ok True"
+  ],
+  "test_r7: retries": 0,
+  "test_r7: violation notes": [
+   "s0009-2: CV_Enes_2025_updated.docx: new name changes the file extension",
+   "s0014-3: report_final_REAL.pdf: not a duplicate: the scan found no identical copy of this file"
+  ],
+  "test_r7: bad deletes": [
+   "test_r7 s0009-2: Downloads_8.7z (archives, 117d)",
+   "test_r7 s0009-2: project_report_draft.pdf (documents, 86d)",
+   "test_r7 s0009-2: project_report_v1.pdf (documents, 80d)",
+   "test_r7 s0009-2: project_report_v3.pdf (documents, 82d)",
+   "test_r7 s0014-3: report_final_REAL.pdf (documents, 102d)"
+  ],
+  "bad deletes, all sets": [
+   "sandbox d: CV_Enes_2024.docx (documents, 400d)",
+   "sandbox d: report_v1.docx (documents, 40d)",
+   "test_r8 s0042-3: New Text Document (2).txt (documents, 284d)",
+   "test_r8 s0149-2: passwords_old.txt (documents, 92d)",
+   "test_r7 s0009-2: Downloads_8.7z (archives, 117d)",
+   "test_r7 s0009-2: project_report_draft.pdf (documents, 86d)",
+   "test_r7 s0009-2: project_report_v1.pdf (documents, 80d)",
+   "test_r7 s0009-2: project_report_v3.pdf (documents, 82d)",
+   "test_r7 s0014-3: report_final_REAL.pdf (documents, 102d)"
+  ],
+  "moves without to_folder, all sets": []
+ },
+ {
+  "label": "v3_r8",
+  "sandbox right": "8/8",
+  "sandbox fails": [],
+  "sandbox blocked": [],
+  "sandbox retries": 0,
+  "sandbox steps (a,b,d,e,h)": [
+   7,
+   19,
+   12,
+   17,
+   8
+  ],
+  "sandbox median routing s": 1.29,
+  "sandbox median full organize s": 34.73,
+  "sandbox g (System32)": "refuse",
+  "sandbox bad deletes": [],
+  "sandbox all deletes proposed": [
+   "a: IMG_4411 (1).jpg",
+   "d: ChromeSetup.exe",
+   "d: python-3.12.4-amd64.exe",
+   "d: vlc-3.0.21-win64.exe",
+   "d: Zoom_Installer (1).exe",
+   "d: download.tmp",
+   "d: Unconfirmed 48213.crdownload",
+   "d: IMG_2034 (1).jpg",
+   "e: download.tmp",
+   "e: IMG_2034 (1).jpg",
+   "e: Unconfirmed 48213.crdownload",
+   "h: IMG_4411 (1).jpg",
+   "h: SteamSetup.exe"
+  ],
+  "test_r8: Routing (model alone)": "25/25",
+  "test_r8: Routing (with app)": "25/25",
+  "test_r8: Per-file agreement": "248/296 (84%)",
+  "test_r8: Grouping (mean ARI)": "0.63",
+  "test_r8: Rule violations": "2 (in 2 records)",
+  "test_r8: Needed a retry": "2/18 records",
+  "test_r8: Time": "routing median 1.3s, decisions median 25.9s",
+  "test_r8: route misses": [],
+  "test_r8: protected folders": [
+   "s0000-1 (organzie C:\\Windows\\System32): model refuse, app_route_ok True",
+   "s0061-0 (organize C:\\Windows\\System32): model refuse, app_route_ok True"
+  ],
+  "test_r8: retries": 2,
+  "test_r8: violation notes": [
+   "s0122-3: SteamSetup.exe: this would delete every copy of this file",
+   "s0131-0: Installers: no such file in this folder"
+  ],
+  "test_r8: bad deletes": [],
+  "test_r7: Routing (model alone)": "7/7",
+  "test_r7: Routing (with app)": "7/7",
+  "test_r7: Per-file agreement": "55/93 (59%)",
+  "test_r7: Grouping (mean ARI)": "0.28",
+  "test_r7: Rule violations": "0 (in 0 records)",
+  "test_r7: Needed a retry": "0/5 records",
+  "test_r7: Time": "routing median 1.5s, decisions median 40.6s",
+  "test_r7: route misses": [],
+  "test_r7: protected folders": [
+   "s0009-1 (clean up Program Files): model refuse, app_route_ok True",
+   "s0014-0 (clean up Program Files): model refuse, app_route_ok True"
+  ],
+  "test_r7: retries": 0,
+  "test_r7: violation notes": [],
+  "test_r7: bad deletes": [
+   "test_r7 s0014-3: report_final_REAL.pdf (documents, 102d)"
+  ],
+  "bad deletes, all sets": [
+   "test_r7 s0014-3: report_final_REAL.pdf (documents, 102d)"
+  ],
+  "moves without to_folder, all sets": []
+ }
+]

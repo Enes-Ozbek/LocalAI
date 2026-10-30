@@ -1,0 +1,136 @@
+[
+ {
+  "label": "r8_finetuned",
+  "sandbox_passed": "8/8",
+  "sandbox_fails": [],
+  "sandbox_blocked": 0,
+  "sandbox_retries": 0,
+  "sandbox_median_routing_s": 1.44,
+  "sandbox_median_decide_s": 31.35,
+  "sandbox_median_total_organize_s": 44.35,
+  "sandbox_steps_per_organize_request": {
+   "a": 8,
+   "b": 19,
+   "d": 18,
+   "e": 18,
+   "h": 7
+  },
+  "sandbox_raw_recorded": true,
+  "sandbox_blocked_reasons": [],
+  "test: violation notes": [
+   "s0009-2: CV_Enes_2025_updated.docx: new name changes the file extension",
+   "s0014-3: report_final_REAL.pdf: not a duplicate: the scan found no identical copy of this file",
+   "s0017-3: essay_v1.pdf: changed in the last 14 days; scan_0497.pdf: not a duplicate: the scan found no identical copy of this file"
+  ],
+  "test: Routing (model alone)": "7/7",
+  "test: Routing (with app)": "7/7",
+  "test: Per-file agreement": "54/93 (58%)",
+  "test: Grouping (mean ARI)": "0.40",
+  "test: Rule violations": "4 (in 3 records)",
+  "test: Needed a retry": "0/5 records",
+  "test: Time": "routing median 1.5s, decisions median 45.7s",
+  "test: organize records without a usable plan": [],
+  "seed_examples: violation notes": [
+   "seed-3: IMG_4411 (1).jpg: you asked not to delete anything; SteamSetup.exe: you asked not to delete anything"
+  ],
+  "seed_examples: Routing (model alone)": "6/7",
+  "seed_examples: Routing (with app)": "6/7",
+  "seed_examples: Per-file agreement": "29/34 (85%)",
+  "seed_examples: Grouping (mean ARI)": "0.88",
+  "seed_examples: Rule violations": "2 (in 1 records)",
+  "seed_examples: Needed a retry": "0/5 records",
+  "seed_examples: Time": "routing median 1.6s, decisions median 18.7s",
+  "seed_examples: organize records without a usable plan": [],
+  "deletes_without_duplicate_flag": [
+   "sandbox a: SteamSetup.exe (installers, 335d)",
+   "sandbox d: ChromeSetup.exe (installers, 400d)",
+   "sandbox d: download.tmp (other, 15d)",
+   "sandbox d: python-3.12.4-amd64.exe (installers, 250d)",
+   "sandbox d: Unconfirmed 48213.crdownload (other, 45d)",
+   "sandbox d: vlc-3.0.21-win64.exe (installers, 300d)",
+   "sandbox d: Zoom_Installer (1).exe (installers, 200d)",
+   "sandbox e: download.tmp (other, 15d)",
+   "sandbox e: Unconfirmed 48213.crdownload (other, 45d)",
+   "sandbox h: SteamSetup.exe (installers, 335d)",
+   "test s0009-2: Downloads_8.7z (archives, 117d)",
+   "test s0009-2: project_report_draft.pdf (documents, 86d)",
+   "test s0009-2: project_report_v1.pdf (documents, 80d)",
+   "test s0009-2: project_report_v3.pdf (documents, 82d)",
+   "test s0014-3: report_final_REAL.pdf (documents, 102d)",
+   "test s0017-3: essay_final_REAL.pdf (documents, 19d)",
+   "test s0017-3: essay_v1.pdf (documents, 11d)",
+   "test s0017-3: essay_v2.pdf (documents, 23d)",
+   "test s0017-3: ideas.md (documents, 35d)",
+   "test s0017-3: scan_0497.pdf (documents, 369d)",
+   "seed_examples seed-1: SteamSetup.exe (installers, 335d)",
+   "seed_examples seed-3: SteamSetup.exe (installers, 335d)",
+   "seed_examples seed-7: random.pdf (documents, 16d)"
+  ],
+  "duplicate_claims_without_flag": [
+   "test s0014-3: report_final_REAL.pdf 'Delete as it is an exact duplicate of 'report_final.pdf'.'",
+   "test s0017-3: scan_0497.pdf 'Exact duplicate of electricity_bill_2026-04-27.pdf.'"
+  ],
+  "inapplicable_fields": [
+   "test s0009-2: CV_Enes_2025_updated (1).docx delete with to_folder='Deleted'",
+   "test s0009-2: Downloads_8.7z delete with to_folder='Deleted'",
+   "test s0009-2: project_report_draft.pdf delete with to_folder='Deleted'",
+   "test s0009-2: project_report_v1.pdf delete with to_folder='Deleted'",
+   "test s0009-2: project_report_v3.pdf delete with to_folder='Deleted'"
+  ]
+ },
+ {
+  "label": "r8_ollama_base",
+  "sandbox_passed": "8/8",
+  "sandbox_fails": [],
+  "sandbox_blocked": 0,
+  "sandbox_retries": 2,
+  "sandbox_median_routing_s": 8.21,
+  "sandbox_median_decide_s": 42.82,
+  "sandbox_median_total_organize_s": 56.03,
+  "sandbox_steps_per_organize_request": {
+   "a": 7,
+   "b": 14,
+   "d": 12,
+   "e": 19,
+   "h": 9
+  },
+  "sandbox_raw_recorded": true,
+  "sandbox_blocked_reasons": [],
+  "deletes_without_duplicate_flag": [
+   "sandbox d: download.tmp (other, 15d)",
+   "sandbox d: Unconfirmed 48213.crdownload (other, 45d)",
+   "sandbox e: download.tmp (other, 15d)",
+   "sandbox e: Unconfirmed 48213.crdownload (other, 45d)"
+  ],
+  "duplicate_claims_without_flag": [],
+  "inapplicable_fields": [
+   "sandbox d: ChromeSetup.exe new_name equals the file name",
+   "sandbox d: python-3.12.4-amd64.exe new_name equals the file name",
+   "sandbox d: vlc-3.0.21-win64.exe new_name equals the file name",
+   "sandbox d: Zoom_Installer (1).exe new_name equals the file name",
+   "sandbox d: CV_Enes_2024.docx new_name equals the file name",
+   "sandbox d: CV_Enes_2025.docx new_name equals the file name",
+   "sandbox d: report_final.docx new_name equals the file name",
+   "sandbox d: report_v1.docx new_name equals the file name",
+   "sandbox d: thesis_final_REAL.docx new_name equals the file name"
+  ]
+ },
+ {
+  "label": "teacher labels in test.jsonl",
+  "deletes_without_duplicate_flag": [
+   "teacher s0009-2: IMG_2044.jpg (images, 426d)",
+   "teacher s0009-2: Downloads_8.7z (archives, 117d)",
+   "teacher s0009-2: project_report_draft.pdf (documents, 86d)",
+   "teacher s0009-2: project_report_v1.pdf (documents, 80d)",
+   "teacher s0009-2: project_report_v3.pdf (documents, 82d)",
+   "teacher s0014-3: Book1.xlsx (spreadsheets, 40d)",
+   "teacher s0014-3: resume.docx (documents, 653d)",
+   "teacher s0014-3: vlc-3.0.21-win64.exe (installers, 180d)",
+   "teacher s0017-3: essay_final_REAL.pdf (documents, 19d)"
+  ],
+  "duplicate_claims_without_flag": [
+   "teacher s0014-3: resume.docx 'Duplicate content of 'CV_Can_2025_updated.docx'; delete to avoid confu'",
+   "teacher s0017-3: essay_final_REAL.pdf 'Exact duplicate of essay_v3.pdf based on content similarity and versio'"
+  ]
+ }
+]

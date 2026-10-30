@@ -18,10 +18,25 @@ def plan_steps(folder: Path, changes: list) -> list:
         if c["action"] == "delete":
             steps.append({"op": "recycle", "src": str(src), "reason": c.get("reason", "")})
             continue
-        target_dir = folder / c["to_folder"] if c.get("to_folder") else folder
+        if c.get("to_path"):  # another folder the user named, such as their Documents
+            target_dir = Path(c["to_path"])
+        else:
+            target_dir = folder / c["to_folder"] if c.get("to_folder") else folder
         dst = _free_name(target_dir / (c.get("new_name") or c["file"]), taken)
         taken.add(dst)
         steps.append({"op": "move", "src": str(src), "dst": str(dst), "reason": c.get("reason", "")})
+    return steps
+
+
+def move_steps(files: list, target_dir: Path, reason: str) -> list:
+    """Moves of whole paths (search results) into one folder; files already there stay where they are."""
+    steps, taken = [], set()
+    for src in files:
+        if src.parent == target_dir:
+            continue
+        dst = _free_name(target_dir / src.name, taken)
+        taken.add(dst)
+        steps.append({"op": "move", "src": str(src), "dst": str(dst), "reason": reason})
     return steps
 
 
@@ -41,7 +56,8 @@ def preview(steps: list, folder: Path) -> str:
         if s["op"] == "recycle":
             lines.append(f"  DELETE  {src}  (to Recycle Bin)  - {s['reason']}")
         else:
-            dst = Path(s["dst"]).relative_to(folder)
+            dst = Path(s["dst"])
+            dst = dst.relative_to(folder) if dst.is_relative_to(folder) else dst  # full path when it leaves the folder
             verb = "RENAME" if Path(s["dst"]).parent == folder else "MOVE  "
             lines.append(f"  {verb}  {src}  ->  {dst}  - {s['reason']}")
     return "\n".join(lines)

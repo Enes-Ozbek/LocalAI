@@ -6,21 +6,32 @@
 Reads dataset/tasks.jsonl and writes:
   dataset/drafts.jsonl     records that pass validate.py, waiting for human review
   dataset/rejected.jsonl   drafts that broke a rule, with the reasons
+A draft that broke a rule for only a few files is kept without those files' changes (validate.drop_bad_changes).
 Run it on a machine with a big GPU (for example Colab with Ollama). It resumes where it stopped.
+With two GPUs, run two copies at once, each with its own Ollama server and half of the tasks:
+    OLLAMA_HOST=127.0.0.1:11434 python dataset/draft_answers.py --teacher qwen3.5:9b --shard 0/2
+    OLLAMA_HOST=127.0.0.1:11435 python dataset/draft_answers.py --teacher qwen3.5:9b --shard 1/2
 
 The teacher should be bigger than the 4B student, otherwise the student only learns its own mistakes.
 """
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
 
+try:
+    import fcntl  # Linux (Colab, Kaggle): two copies of this script append to the same files
+except ImportError:
+    fcntl = None
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+os.environ.setdefault("LLM_BACKEND", "ollama")  # the teacher is an Ollama model, never our fine-tuned GGUF
 from assistant import llm  # noqa: E402
 from assistant.schema import SYSTEM_PROMPT, tool_result  # noqa: E402
-from validate import check  # noqa: E402
+from validate import check, drop_bad_changes  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 
@@ -37,9 +48,17 @@ Rules:
   file -> same folder name.
 - Delete only exact duplicates (duplicate_of), old installers, temporary or broken downloads
   (.tmp, .crdownload, .part) and empty notes. Never delete anything changed in the last 14 days
-  unless it is an exact duplicate. When unsure, leave the file alone (no entry).
+  unless it is an exact duplicate. Never delete documents, photos or archives that are not exact
+  duplicates: move old versions into a subfolder such as "Old versions" instead. Call a file a
+  duplicate only if it has duplicate_of or another file is a duplicate_of it. When unsure, leave the
+  file alone (no entry).
 - Follow every limit in the request exactly ("don't delete" -> no delete at all; "only the pdfs" ->
   only change PDFs; "leave the photos" -> no change to images; "by year" -> folders named by year).
+- If the request names a file (or a few), change only those files, exactly as asked: delete it (a file the
+  user names may be deleted even if it is not a duplicate), rename it to the given name, or move it to the
+  folder the user names. to_folder is just that folder's name, for example "Important" or "Documents", even
+  when it is one of the user's main folders such as Documents, Desktop or Pictures. The explanation is then one
+  or two lines about that file.
 - If the user only wants to know what is there, "changes" must be [].
 - Never invent files. Use each file at most once."""
 
@@ -101,12 +120,21 @@ def ask_teacher(task, teacher):
     return answer
 
 
+def append(path: Path, rec: dict):
+    with open(path, "a", encoding="utf-8") as out:
+        if fcntl:
+            fcntl.flock(out, fcntl.LOCK_EX)  # whole lines only, also when two copies write at once
+        out.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--teacher", required=True, help="Ollama model name, bigger than the student")
     ap.add_argument("--tasks", default=str(HERE / "tasks.jsonl"))
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--shard", default="0/1", help="k/n: do every n-th task starting at k (one copy per GPU)")
     args = ap.parse_args()
+    k, n = map(int, args.shard.split("/"))
 
     drafts, rejected = HERE / "drafts.jsonl", HERE / "rejected.jsonl"
     done = set()
@@ -115,7 +143,8 @@ def main():
             done |= {json.loads(line)["meta"]["task_id"] for line in open(path, encoding="utf-8") if line.strip()}
 
     tasks = [json.loads(line) for line in open(args.tasks, encoding="utf-8") if line.strip()]
-    todo = [t for t in tasks if t["task_id"] not in done][: args.limit or None]
+    # every n-th task of the whole list, so two copies never pick the same task, whenever each one starts
+    todo = [t for i, t in enumerate(tasks) if i % n == k and t["task_id"] not in done][: args.limit or None]
     print(f"{len(done)} already drafted, {len(todo)} to go, teacher = {args.teacher}")
     ok = bad = 0
     for i, task in enumerate(todo, 1):
@@ -124,18 +153,18 @@ def main():
             answer = None if task["request_type"] in ("clarify", "refuse") else ask_teacher(task, args.teacher)
             rec = build_record(task, answer)
             errors = check(rec)
+            fixed = drop_bad_changes(rec)[0] if errors else None
         except Exception as e:  # a broken teacher answer is rejected, not fatal
-            rec, errors = {"meta": {"task_id": task["task_id"]}, "task": task}, [f"teacher failed: {e}"]
-        target = rejected if errors else drafts
-        if errors:
+            rec, errors, fixed = {"meta": {"task_id": task["task_id"]}, "task": task}, [f"teacher failed: {e}"], None
+        if errors and not fixed:
             rec["errors"] = errors
             bad += 1
+            append(rejected, rec)
         else:
             ok += 1
-        with open(target, "a", encoding="utf-8") as out:
-            out.write(json.dumps(rec, ensure_ascii=False) + "\n")
-        print(f"[{i}/{len(todo)}] {task['task_id']} {task['request_type']:25} "
-              f"{'REJECTED' if errors else 'ok'} ({time.perf_counter() - start:.1f}s)")
+            append(drafts, fixed or rec)
+        status = "REJECTED" if errors and not fixed else f"ok, dropped {', '.join(fixed['meta']['dropped'])}" if fixed else "ok"
+        print(f"[{i}/{len(todo)}] {task['task_id']} {task['request_type']:25} {status} ({time.perf_counter() - start:.1f}s)")
     print(f"Done: {ok} drafts, {bad} rejected. Next: python dataset/review.py")
 
 

@@ -37,3 +37,12 @@ tools/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Test folders and caches
+.pytest_cache/
+.pytest_tmp/
+
+# Logs, backups the assistant made before code changes, and the old test script (bench/ replaces it)
+*.log
+results/backup_*/
+test_run.py

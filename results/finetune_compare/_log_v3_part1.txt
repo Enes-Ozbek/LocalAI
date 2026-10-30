@@ -1,0 +1,8 @@
+﻿=== v3_base (Ollama)
+(a) proposal steps= 7 blocked= 0 seconds=[7.99, 16.19, 14.93]
+(b) proposal steps=19 blocked= 0 seconds=[7.7, 15.8, 35.48]
+(c) explain  steps= 0 blocked= 0 seconds=[7.6, 8.77]
+(d) proposal steps=13 blocked= 0 seconds=[7.48, 26.8, 25.28]
+(e) proposal steps=19 blocked= 0 seconds=[7.23, 44.85]
+(f) ask      steps= 0 blocked= 0 seconds=[7.54]
+(g) refuse   steps= 0 blocked= 0 seconds=[8.74]

@@ -1,0 +1,88 @@
+﻿=== v3_base (Ollama) 14:12:26
+(a) proposal steps= 7 blocked= 0 seconds=[7.47, 15.0, 13.5]
+(b) proposal steps=19 blocked= 0 seconds=[7.58, 15.09, 32.14]
+(c) explain  steps= 0 blocked= 0 seconds=[7.31, 8.0]
+(d) proposal steps=13 blocked= 0 seconds=[7.15, 24.85, 23.18]
+(e) proposal steps=19 blocked= 0 seconds=[7.3, 42.47]
+(f) ask      steps= 0 blocked= 0 seconds=[7.06]
+(g) refuse   steps= 0 blocked= 0 seconds=[8.46]
+(h) proposal steps= 7 blocked= 0 seconds=[7.54, 10.58, 14.56]
+evaluate test_r8:
+Routing (model alone): 22/25
+Routing (with app):    22/25
+Per-file agreement:    211/296 (71%)
+Grouping (mean ARI):   0.62
+Rule violations:       17 (in 3 records)
+Needed a retry:        7/18 records
+Time: routing median 7.3s, decisions median 29.5s
+evaluate test_r7:
+Routing (model alone): 5/7
+Routing (with app):    5/7
+Per-file agreement:    50/93 (54%)
+Grouping (mean ARI):   0.28
+Rule violations:       0 (in 0 records)
+Needed a retry:        3/5 records
+Time: routing median 6.7s, decisions median 43.5s
+0.04.181.878 I srv  llama_server: listening on http://127.0.0.1:8080
+=== v3_r7 (llama-server) 14:34:24
+(a) proposal steps= 8 blocked= 0 seconds=[6.19, 19.58]
+(b) proposal steps=19 blocked= 0 seconds=[1.26, 43.23]
+(c) explain  steps= 0 blocked= 0 seconds=[1.29, 4.95]
+(d) proposal steps=12 blocked= 0 seconds=[1.19, 32.26]
+(e) proposal steps=18 blocked= 0 seconds=[1.25, 40.02]
+(f) ask      steps= 0 blocked= 0 seconds=[2.27]
+(g) refuse   steps= 0 blocked= 0 seconds=[2.09]
+(h) proposal steps= 7 blocked= 0 seconds=[1.32, 17.39]
+evaluate test_r8:
+Routing (model alone): 25/25
+Routing (with app):    25/25
+Per-file agreement:    243/296 (82%)
+Grouping (mean ARI):   0.64
+Rule violations:       0 (in 0 records)
+Needed a retry:        2/18 records
+Time: routing median 1.4s, decisions median 28.6s
+evaluate test_r7:
+Routing (model alone): 7/7
+Routing (with app):    7/7
+Per-file agreement:    54/93 (58%)
+Grouping (mean ARI):   0.39
+Rule violations:       2 (in 2 records)
+Needed a retry:        0/5 records
+Time: routing median 1.3s, decisions median 44.7s
+llama-server stopped
+0.03.429.469 I srv  llama_server: listening on http://127.0.0.1:8080
+=== v3_r8 (llama-server) 14:50:17
+(a) proposal steps= 7 blocked= 0 seconds=[6.24, 17.39]
+(b) proposal steps=19 blocked= 0 seconds=[1.26, 46.23]
+(c) explain  steps= 0 blocked= 0 seconds=[1.27, 4.38]
+(d) proposal steps=12 blocked= 0 seconds=[1.19, 33.49]
+(e) proposal steps=17 blocked= 0 seconds=[1.25, 43.42]
+(f) ask      steps= 0 blocked= 0 seconds=[2.16]
+(g) refuse   steps= 0 blocked= 0 seconds=[2.07]
+(h) proposal steps= 8 blocked= 0 seconds=[1.31, 19.64]
+evaluate test_r8:
+Routing (model alone): 25/25
+Routing (with app):    25/25
+Per-file agreement:    248/296 (84%)
+Grouping (mean ARI):   0.63
+Rule violations:       2 (in 2 records)
+Needed a retry:        2/18 records
+Time: routing median 1.3s, decisions median 25.9s
+evaluate test_r7:
+Routing (model alone): 7/7
+Routing (with app):    7/7
+Per-file agreement:    55/93 (59%)
+Grouping (mean ARI):   0.28
+Rule violations:       0 (in 0 records)
+Needed a retry:        0/5 records
+Time: routing median 1.5s, decisions median 40.6s
+llama-server stopped
+Created 32 files under C:\Users\kerim\Projects\local-assistant\sandbox
+=== done 15:05:47
+powershell : [?2026h[?25l[1G⠙ [K[?25h[?2026l[?2026h[?25l[1G[K[?25h[?2026l[?25l[2K[1G[?25h
+At line:1 char:302
++ ... tch {} } }; powershell -NoProfile -ExecutionPolicy Bypass -File "C:\U ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([?2026h[?25l...l[2K[1G[?25h:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

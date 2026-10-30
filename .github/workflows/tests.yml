@@ -1,0 +1,21 @@
+# Runs the tests on every push and pull request, on Windows (where the app runs) and Linux. No model is needed.
+name: tests
+on: [push, pull_request]
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pytest
+      # outside the home folder: the app refuses to change anything under AppData, where Windows keeps temp files
+      - run: python -m pytest -q --basetemp="${{ runner.temp }}/pytest"
+      - run: python dataset/validate.py dataset/seed_examples.jsonl
+      - run: python dataset/validate.py dataset/test.jsonl

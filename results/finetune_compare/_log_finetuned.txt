@@ -1,0 +1,48 @@
+(a) proposal steps= 2 blocked= 6 seconds=[6.45, 18.33]
+(b) proposal steps= 0 blocked=18 seconds=[1.42, 40.6]
+(c) explain  steps= 0 blocked= 0 seconds=[1.39, 5.1]
+(d) proposal steps= 8 blocked=10 seconds=[1.2, 41.71]
+(e) proposal steps= 3 blocked=15 seconds=[1.37, 37.98]
+(f) ask      steps= 0 blocked= 0 seconds=[2.23]
+(g) refuse   steps= 0 blocked= 0 seconds=[2.13]
+(h) proposal steps= 2 blocked= 6 seconds=[1.33, 18.91]
+evaluate test:
+Routing (model alone): 7/7
+Routing (with app):    7/7
+Per-file agreement:    60/93 (65%)
+Grouping (mean ARI):   0.27
+Rule violations:       13 (in 1 records)
+Needed a retry:        0/5 records
+Time: routing median 1.5s, decisions median 41.5s
+evaluate seed_examples:
+Routing (model alone): 6/7
+Routing (with app):    6/7
+Per-file agreement:    29/34 (85%)
+Grouping (mean ARI):   0.81
+Rule violations:       7 (in 2 records)
+Needed a retry:        0/5 records
+Time: routing median 1.5s, decisions median 18.0s
+(a) proposal steps= 8 blocked= 0 seconds=[6.98, 20.4]
+(b) proposal steps=19 blocked= 0 seconds=[1.49, 46.74]
+(c) explain  steps= 0 blocked= 0 seconds=[1.48, 5.31]
+(d) proposal steps=18 blocked= 0 seconds=[1.27, 43.05]
+(e) proposal steps=18 blocked= 0 seconds=[1.5, 43.91]
+(f) ask      steps= 0 blocked= 0 seconds=[2.46]
+(g) refuse   steps= 0 blocked= 0 seconds=[2.21]
+(h) proposal steps= 7 blocked= 0 seconds=[1.38, 18.59]
+evaluate test:
+Routing (model alone): 7/7
+Routing (with app):    7/7
+Per-file agreement:    54/93 (58%)
+Grouping (mean ARI):   0.40
+Rule violations:       2 (in 2 records)
+Needed a retry:        0/5 records
+Time: routing median 1.5s, decisions median 45.5s
+evaluate seed_examples:
+Routing (model alone): 6/7
+Routing (with app):    6/7
+Per-file agreement:    29/34 (85%)
+Grouping (mean ARI):   0.88
+Rule violations:       2 (in 1 records)
+Needed a retry:        0/5 records
+Time: routing median 1.5s, decisions median 17.1s

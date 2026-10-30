@@ -1,0 +1,17 @@
+[1/7] s0009-1 route MISS (inspect_folder)
+[2/7] s0009-2 route OK (inspect_folder) files 1/19 ARI 0.136 violations 0
+[3/7] s0009-3 route OK (inspect_folder) files 19/19 ARI 1.0 violations 0
+[4/7] s0014-0 route MISS (inspect_folder)
+[5/7] s0014-3 route OK (inspect_folder) files 9/19 ARI 0.033 violations 0
+[6/7] s0017-1 route OK (inspect_folder) files 1/18 ARI -0.101 violations 0
+[7/7] s0017-3 route OK (inspect_folder) files 14/18 ARI 0.249 violations 0
+
+== qwen3.5:4b-q4_K_M on 7 records (test.jsonl)
+Routing (model alone): 5/7
+Routing (with app):    5/7
+Per-file agreement:    44/93 (47%)
+Grouping (mean ARI):   0.26
+Rule violations:       0 (in 0 records)
+Needed a retry:        0/5 records
+Time: routing median 1.4s, decisions median 52.2s
+Details: dataset\eval_test_qwen3.5_4b-q4_K_M.csv

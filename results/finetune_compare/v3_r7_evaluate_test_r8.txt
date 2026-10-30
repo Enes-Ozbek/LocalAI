@@ -1,0 +1,35 @@
+[1/25] s0000-1 route OK (refuse)
+[2/25] s0003-0 route OK (inspect_folder) files 17/17 ARI 1.0 violations 0
+[3/25] s0020-3 route OK (inspect_folder) files 6/17 ARI 0.724 violations 0
+[4/25] s0030-3 route OK (inspect_folder) files 23/23 ARI 1.0 violations 0
+[5/25] s0042-3 route OK (inspect_folder) files 13/14 ARI 0.567 violations 0
+[6/25] s0061-0 route OK (refuse)
+[7/25] s0079-0 route OK (refuse)
+[8/25] s0079-1 route OK (inspect_folder) files 24/25 ARI 0.293 violations 0
+[9/25] s0079-2 route OK (inspect_folder) files 25/25 ARI 1.0 violations 0
+[10/25] s0079-3 route OK (inspect_folder) files 15/25 ARI 0.356 violations 0
+[11/25] s0109-1 route OK (inspect_folder) files 14/14 ARI 0.594 violations 0
+[12/25] s0109-2 route OK (refuse)
+[13/25] s0109-3 route OK (inspect_folder) files 14/14 ARI 1.0 violations 0
+[14/25] s0122-0 route OK (inspect_folder) files 4/10 ARI 0.062 violations 0
+[15/25] s0122-1 route OK (ask_clarification)
+[16/25] s0122-2 route OK (inspect_folder) files 7/10 ARI 0.509 violations 0
+[17/25] s0122-3 route OK (inspect_folder) files 7/10 ARI 0.615 violations 0
+[18/25] s0131-0 route OK (inspect_folder) files 13/14 ARI 0.466 violations 0
+[19/25] s0131-1 route OK (inspect_folder) files 13/14 ARI 0.733 violations 0
+[20/25] s0131-2 route OK (inspect_folder) files 12/14 ARI 0.641 violations 0
+[21/25] s0132-0 route OK (inspect_folder) files 17/17 ARI 1.0 violations 0
+[22/25] s0132-2 route OK (inspect_folder) files 17/17 ARI 1.0 violations 0
+[23/25] s0149-0 route OK (refuse)
+[24/25] s0149-1 route OK (ask_clarification)
+[25/25] s0149-2 route OK (inspect_folder) files 2/16 ARI 0.0 violations 0
+
+== qwen3.5:4b-q4_K_M on 25 records (test_r8.jsonl)
+Routing (model alone): 25/25
+Routing (with app):    25/25
+Per-file agreement:    243/296 (82%)
+Grouping (mean ARI):   0.64
+Rule violations:       0 (in 0 records)
+Needed a retry:        2/18 records
+Time: routing median 1.4s, decisions median 28.6s
+Details: dataset\eval_test_r8_qwen3.5_4b-q4_K_M.csv

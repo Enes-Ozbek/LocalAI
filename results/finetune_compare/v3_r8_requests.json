@@ -1,0 +1,1117 @@
+[
+ {
+  "key": "a",
+  "request": "check files in my downloads/new folder1 and tell me what those are then organise them",
+  "kind": "proposal",
+  "seconds": [
+   6.24,
+   17.39
+  ],
+  "total_s": 23.95,
+  "retries": 0,
+  "text": "The folder contains a mix of academic materials (Linear Algebra homework solutions, Operating Systems lecture notes), personal notes (groceries, dentist appointment), utility bills (Turkcell invoice), photos (IMG_4410 and IMG_4411), and an old installer. There is also one exact duplicate image file.\n\n",
+  "changes": [
+   {
+    "file": "IMG_4411 (1).jpg",
+    "action": "delete",
+    "target": "",
+    "reason": "Exact duplicate of IMG_4411.jpg",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": "IMG_4411.jpg",
+    "age_days": 48
+   },
+   {
+    "file": "hw2_solution.pdf",
+    "action": "move",
+    "target": "Academics\\hw2_solution.pdf",
+    "reason": "Academic homework solution",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 9
+   },
+   {
+    "file": "Lecture_07.pdf",
+    "action": "move",
+    "target": "Academics\\Lecture_07.pdf",
+    "reason": "Academic lecture note",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 13
+   },
+   {
+    "file": "Lecture_08.pdf",
+    "action": "move",
+    "target": "Academics\\Lecture_08.pdf",
+    "reason": "Academic lecture note",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 6
+   },
+   {
+    "file": "notes.txt",
+    "action": "move",
+    "target": "Personal\\notes.txt",
+    "reason": "Personal notes",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 3
+   },
+   {
+    "file": "scan_0031.pdf",
+    "action": "move",
+    "target": "Bills\\scan_0031.pdf",
+    "reason": "Utility bill",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 21
+   },
+   {
+    "file": "SteamSetup.exe",
+    "action": "move",
+    "target": "Archives\\SteamSetup.exe",
+    "reason": "Old installer, likely no longer needed",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 335
+   }
+  ],
+  "raw_changes": [
+   {
+    "file": "IMG_4411 (1).jpg",
+    "action": "delete",
+    "reason": "Exact duplicate of IMG_4411.jpg"
+   },
+   {
+    "file": "hw2_solution.pdf",
+    "action": "move",
+    "reason": "Academic homework solution",
+    "to_folder": "Academics"
+   },
+   {
+    "file": "Lecture_07.pdf",
+    "action": "move",
+    "reason": "Academic lecture note",
+    "to_folder": "Academics"
+   },
+   {
+    "file": "Lecture_08.pdf",
+    "action": "move",
+    "reason": "Academic lecture note",
+    "to_folder": "Academics"
+   },
+   {
+    "file": "notes.txt",
+    "action": "move",
+    "reason": "Personal notes",
+    "to_folder": "Personal"
+   },
+   {
+    "file": "scan_0031.pdf",
+    "action": "move",
+    "reason": "Utility bill",
+    "to_folder": "Bills"
+   },
+   {
+    "file": "SteamSetup.exe",
+    "action": "move",
+    "reason": "Old installer, likely no longer needed",
+    "to_folder": "Archives"
+   }
+  ]
+ },
+ {
+  "key": "b",
+  "request": "organize downloads but don't delete anything",
+  "kind": "proposal",
+  "seconds": [
+   1.26,
+   46.23
+  ],
+  "total_s": 47.71,
+  "retries": 0,
+  "text": "The folder contains a mix of personal finance records (budget.csv), academic materials (calculus notes, lecture5.pdf, thesis_final_REAL.docx, report_final.docx), professional documents (CVs), legal/rental agreements, utility bills (scan_0012.pdf), and various software installers. There are also temporary download files (.crdownload, .tmp) and duplicate images that need attention.\n\n",
+  "changes": [
+   {
+    "file": "budget.csv",
+    "action": "move",
+    "target": "Finance\\budget.csv",
+    "reason": "Finance records belong in a dedicated folder.",
+    "blocked": "",
+    "type": "spreadsheets",
+    "duplicate_of": null,
+    "age_days": 260
+   },
+   {
+    "file": "calculus_week3_notes.pdf",
+    "action": "move",
+    "target": "Academics\\Calculus\\calculus_week3_notes.pdf",
+    "reason": "Academic notes should be organized by subject.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 90
+   },
+   {
+    "file": "ChromeSetup.exe",
+    "action": "move",
+    "target": "Archives\\Installers\\ChromeSetup.exe",
+    "reason": "Old installers should be archived.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 400
+   },
+   {
+    "file": "CV_Enes_2024.docx",
+    "action": "move",
+    "target": "Old versions\\CV_Enes_2024.docx",
+    "reason": "Older version of CV belongs in an 'Old versions' folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 400
+   },
+   {
+    "file": "CV_Enes_2025.docx",
+    "action": "move",
+    "target": "Resumes\\CV_Enes_2025.docx",
+    "reason": "Updated CV belongs in a dedicated 'Resumes' folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 60
+   },
+   {
+    "file": "document(3).pdf",
+    "action": "move",
+    "target": "Legal\\document(3).pdf",
+    "reason": "Rental agreement is a legal document.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 50
+   },
+   {
+    "file": "download.tmp",
+    "action": "move",
+    "target": "Incomplete downloads\\download.tmp",
+    "reason": "Temporary file should be moved to an 'Incomplete downloads' folder.",
+    "blocked": "",
+    "type": "other",
+    "duplicate_of": null,
+    "age_days": 15
+   },
+   {
+    "file": "IMG_2034 (1).jpg",
+    "action": "move",
+    "target": "Old versions\\IMG_2034 (1).jpg",
+    "reason": "Duplicate image should be moved to an 'Old versions' folder.",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": "IMG_2034.jpg",
+    "age_days": 119
+   },
+   {
+    "file": "IMG_2034.jpg",
+    "action": "move",
+    "target": "Photos\\IMG_2034.jpg",
+    "reason": "Original image belongs in a dedicated 'Photos' folder.",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": null,
+    "age_days": 120
+   },
+   {
+    "file": "lecture5.pdf",
+    "action": "move",
+    "target": "Academics\\Data Structures\\lecture5.pdf",
+    "reason": "Lecture notes belong in the Academics folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 70
+   },
+   {
+    "file": "python-3.12.4-amd64.exe",
+    "action": "move",
+    "target": "Archives\\Installers\\python-3.12.4-amd64.exe",
+    "reason": "Software installer should be archived.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 250
+   },
+   {
+    "file": "report_final.docx",
+    "action": "move",
+    "target": "Reports\\report_final.docx",
+    "reason": "Final report belongs in a dedicated 'Reports' folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 20
+   },
+   {
+    "file": "report_v1.docx",
+    "action": "move",
+    "target": "Old versions\\report_v1.docx",
+    "reason": "Draft version of the report belongs in an 'Old versions' folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 40
+   },
+   {
+    "file": "scan_0012.pdf",
+    "action": "move",
+    "target": "Finance\\scan_0012.pdf",
+    "reason": "Utility bill belongs in the Finance folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 220
+   },
+   {
+    "file": "thesis_final_REAL.docx",
+    "action": "move",
+    "target": "Academics\\Thesis\\thesis_final_REAL.docx",
+    "reason": "Thesis belongs in the Academics folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 7
+   },
+   {
+    "file": "Unconfirmed 48213.crdownload",
+    "action": "move",
+    "target": "Incomplete downloads\\Unconfirmed 48213.crdownload",
+    "reason": "Incomplete download should be moved to an 'Incomplete downloads' folder.",
+    "blocked": "",
+    "type": "other",
+    "duplicate_of": null,
+    "age_days": 45
+   },
+   {
+    "file": "vlc-3.0.21-win64.exe",
+    "action": "move",
+    "target": "Archives\\Installers\\vlc-3.0.21-win64.exe",
+    "reason": "Software installer should be archived.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 300
+   },
+   {
+    "file": "WhatsApp Image 2025-03-02 at 14.22.11.jpeg",
+    "action": "move",
+    "target": "Photos\\WhatsApp Image 2025-03-02 at 14.22.11.jpeg",
+    "reason": "Personal photo belongs in the Photos folder.",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": null,
+    "age_days": 230
+   },
+   {
+    "file": "Zoom_Installer (1).exe",
+    "action": "move",
+    "target": "Archives\\Installers\\Zoom_Installer (1).exe",
+    "reason": "Software installer should be archived.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 200
+   }
+  ],
+  "raw_changes": [
+   {
+    "file": "budget.csv",
+    "action": "move",
+    "reason": "Finance records belong in a dedicated folder.",
+    "to_folder": "Finance"
+   },
+   {
+    "file": "calculus_week3_notes.pdf",
+    "action": "move",
+    "reason": "Academic notes should be organized by subject.",
+    "to_folder": "Academics/Calculus"
+   },
+   {
+    "file": "ChromeSetup.exe",
+    "action": "move",
+    "reason": "Old installers should be archived.",
+    "to_folder": "Archives/Installers"
+   },
+   {
+    "file": "CV_Enes_2024.docx",
+    "action": "move",
+    "reason": "Older version of CV belongs in an 'Old versions' folder.",
+    "to_folder": "Old versions"
+   },
+   {
+    "file": "CV_Enes_2025.docx",
+    "action": "move",
+    "reason": "Updated CV belongs in a dedicated 'Resumes' folder.",
+    "to_folder": "Resumes"
+   },
+   {
+    "file": "document(3).pdf",
+    "action": "move",
+    "reason": "Rental agreement is a legal document.",
+    "to_folder": "Legal"
+   },
+   {
+    "file": "download.tmp",
+    "action": "move",
+    "reason": "Temporary file should be moved to an 'Incomplete downloads' folder.",
+    "to_folder": "Incomplete downloads"
+   },
+   {
+    "file": "IMG_2034 (1).jpg",
+    "action": "move",
+    "reason": "Duplicate image should be moved to an 'Old versions' folder.",
+    "to_folder": "Old versions"
+   },
+   {
+    "file": "IMG_2034.jpg",
+    "action": "move",
+    "reason": "Original image belongs in a dedicated 'Photos' folder.",
+    "to_folder": "Photos"
+   },
+   {
+    "file": "lecture5.pdf",
+    "action": "move",
+    "reason": "Lecture notes belong in the Academics folder.",
+    "to_folder": "Academics/Data Structures"
+   },
+   {
+    "file": "python-3.12.4-amd64.exe",
+    "action": "move",
+    "reason": "Software installer should be archived.",
+    "to_folder": "Archives/Installers"
+   },
+   {
+    "file": "report_final.docx",
+    "action": "move",
+    "reason": "Final report belongs in a dedicated 'Reports' folder.",
+    "to_folder": "Reports"
+   },
+   {
+    "file": "report_v1.docx",
+    "action": "move",
+    "reason": "Draft version of the report belongs in an 'Old versions' folder.",
+    "to_folder": "Old versions"
+   },
+   {
+    "file": "scan_0012.pdf",
+    "action": "move",
+    "reason": "Utility bill belongs in the Finance folder.",
+    "to_folder": "Finance"
+   },
+   {
+    "file": "thesis_final_REAL.docx",
+    "action": "move",
+    "reason": "Thesis belongs in the Academics folder.",
+    "to_folder": "Academics/Thesis"
+   },
+   {
+    "file": "Unconfirmed 48213.crdownload",
+    "action": "move",
+    "reason": "Incomplete download should be moved to an 'Incomplete downloads' folder.",
+    "to_folder": "Incomplete downloads"
+   },
+   {
+    "file": "vlc-3.0.21-win64.exe",
+    "action": "move",
+    "reason": "Software installer should be archived.",
+    "to_folder": "Archives/Installers"
+   },
+   {
+    "file": "WhatsApp Image 2025-03-02 at 14.22.11.jpeg",
+    "action": "move",
+    "reason": "Personal photo belongs in the Photos folder.",
+    "to_folder": "Photos"
+   },
+   {
+    "file": "Zoom_Installer (1).exe",
+    "action": "move",
+    "reason": "Software installer should be archived.",
+    "to_folder": "Archives/Installers"
+   }
+  ]
+ },
+ {
+  "key": "c",
+  "request": "what's on my desktop? don't change anything",
+  "kind": "explain",
+  "seconds": [
+   1.27,
+   4.38
+  ],
+  "total_s": 5.7,
+  "retries": 0,
+  "text": "Your desktop contains three versions of a Capstone project proposal (v2 and v3) for a Privacy-First Local AI Assistant, a screenshot taken on October 19th, and a short todo list with three items.",
+  "changes": [],
+  "raw_changes": []
+ },
+ {
+  "key": "d",
+  "request": "clean up my downloads",
+  "kind": "proposal",
+  "seconds": [
+   1.19,
+   33.49
+  ],
+  "total_s": 34.73,
+  "retries": 0,
+  "text": "The folder contains a mix of personal finance records (budget.csv), academic materials (calculus notes, lecture5.pdf, thesis_final_REAL.docx, report_final.docx), professional documents (CVs), utility bills (scan_0012.pdf), and various software installers. There are also temporary download fragments (.crdownload, .tmp) and duplicate image files that need attention.\n\n",
+  "changes": [
+   {
+    "file": "ChromeSetup.exe",
+    "action": "delete",
+    "target": "",
+    "reason": "Old installer (400 days old), likely no longer needed.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 400
+   },
+   {
+    "file": "python-3.12.4-amd64.exe",
+    "action": "delete",
+    "target": "",
+    "reason": "Old installer (250 days old), likely no longer needed.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 250
+   },
+   {
+    "file": "vlc-3.0.21-win64.exe",
+    "action": "delete",
+    "target": "",
+    "reason": "Old installer (300 days old), likely no longer needed.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 300
+   },
+   {
+    "file": "Zoom_Installer (1).exe",
+    "action": "delete",
+    "target": "",
+    "reason": "Old installer (200 days old), likely no longer needed.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 200
+   },
+   {
+    "file": "download.tmp",
+    "action": "delete",
+    "target": "",
+    "reason": "Temporary file, incomplete download.",
+    "blocked": "",
+    "type": "other",
+    "duplicate_of": null,
+    "age_days": 15
+   },
+   {
+    "file": "Unconfirmed 48213.crdownload",
+    "action": "delete",
+    "target": "",
+    "reason": "Incomplete download fragment.",
+    "blocked": "",
+    "type": "other",
+    "duplicate_of": null,
+    "age_days": 45
+   },
+   {
+    "file": "IMG_2034 (1).jpg",
+    "action": "delete",
+    "target": "",
+    "reason": "Exact duplicate of IMG_2034.jpg.",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": "IMG_2034.jpg",
+    "age_days": 119
+   },
+   {
+    "file": "document(3).pdf",
+    "action": "move",
+    "target": "Rental_Agreement_Istanbul.pdf",
+    "reason": "Generic name; rename to 'Rental_Agreement_Istanbul.pdf' for clarity.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 50
+   },
+   {
+    "file": "report_v1.docx",
+    "action": "move",
+    "target": "Academics\\Drafts\\report_v1.docx",
+    "reason": "Older draft version of the capstone report.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 40
+   },
+   {
+    "file": "CV_Enes_2024.docx",
+    "action": "move",
+    "target": "Professional\\CVs\\CV_Enes_2024.docx",
+    "reason": "Older version of the CV.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 400
+   },
+   {
+    "file": "scan_0012.pdf",
+    "action": "move",
+    "target": "Bills\\scan_0012.pdf",
+    "reason": "Utility bill; move to a Bills folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 220
+   },
+   {
+    "file": "WhatsApp Image 2025-03-02 at 14.22.11.jpeg",
+    "action": "move",
+    "target": "Images\\WhatsApp Image 2025-03-02 at 14.22.11.jpeg",
+    "reason": "Personal photo; move to an Images folder.",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": null,
+    "age_days": 230
+   }
+  ],
+  "raw_changes": [
+   {
+    "file": "ChromeSetup.exe",
+    "action": "delete",
+    "reason": "Old installer (400 days old), likely no longer needed."
+   },
+   {
+    "file": "python-3.12.4-amd64.exe",
+    "action": "delete",
+    "reason": "Old installer (250 days old), likely no longer needed."
+   },
+   {
+    "file": "vlc-3.0.21-win64.exe",
+    "action": "delete",
+    "reason": "Old installer (300 days old), likely no longer needed."
+   },
+   {
+    "file": "Zoom_Installer (1).exe",
+    "action": "delete",
+    "reason": "Old installer (200 days old), likely no longer needed."
+   },
+   {
+    "file": "download.tmp",
+    "action": "delete",
+    "reason": "Temporary file, incomplete download."
+   },
+   {
+    "file": "Unconfirmed 48213.crdownload",
+    "action": "delete",
+    "reason": "Incomplete download fragment."
+   },
+   {
+    "file": "IMG_2034 (1).jpg",
+    "action": "delete",
+    "reason": "Exact duplicate of IMG_2034.jpg."
+   },
+   {
+    "file": "document(3).pdf",
+    "action": "rename",
+    "reason": "Generic name; rename to 'Rental_Agreement_Istanbul.pdf' for clarity.",
+    "new_name": "Rental_Agreement_Istanbul.pdf"
+   },
+   {
+    "file": "report_v1.docx",
+    "action": "move",
+    "reason": "Older draft version of the capstone report.",
+    "to_folder": "Academics/Drafts"
+   },
+   {
+    "file": "CV_Enes_2024.docx",
+    "action": "move",
+    "reason": "Older version of the CV.",
+    "to_folder": "Professional/CVs"
+   },
+   {
+    "file": "scan_0012.pdf",
+    "action": "move",
+    "reason": "Utility bill; move to a Bills folder.",
+    "to_folder": "Bills"
+   },
+   {
+    "file": "WhatsApp Image 2025-03-02 at 14.22.11.jpeg",
+    "action": "move",
+    "reason": "Personal photo; move to an Images folder.",
+    "to_folder": "Images"
+   }
+  ]
+ },
+ {
+  "key": "e",
+  "request": "organise downloads by file type",
+  "kind": "proposal",
+  "seconds": [
+   1.25,
+   43.42
+  ],
+  "total_s": 44.73,
+  "retries": 0,
+  "text": "The folder contains a mix of personal finance data (budget), academic work (calculus notes, data structures lecture, capstone report, thesis), legal documents (rental agreement, VAT invoice), and software installers. There are also duplicate images and temporary download files that need cleaning up.\n\n",
+  "changes": [
+   {
+    "file": "budget.csv",
+    "action": "move",
+    "target": "Finance\\budget.csv",
+    "reason": "Finance file should be organized separately from academic and legal documents.",
+    "blocked": "",
+    "type": "spreadsheets",
+    "duplicate_of": null,
+    "age_days": 260
+   },
+   {
+    "file": "calculus_week3_notes.pdf",
+    "action": "move",
+    "target": "Academics\\Calculus II\\calculus_week3_notes.pdf",
+    "reason": "Academic notes belong in a dedicated course folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 90
+   },
+   {
+    "file": "CV_Enes_2024.docx",
+    "action": "move",
+    "target": "Academics\\CVs\\2024\\CV_Enes_2024.docx",
+    "reason": "Older version of the CV should be archived.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 400
+   },
+   {
+    "file": "CV_Enes_2025.docx",
+    "action": "move",
+    "target": "Academics\\CVs\\2025\\CV_Enes_2025.docx",
+    "reason": "Current version of the CV belongs in the active CV folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 60
+   },
+   {
+    "file": "document(3).pdf",
+    "action": "move",
+    "target": "Legal\\document(3).pdf",
+    "reason": "Rental agreement is a legal document, not an academic one.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 50
+   },
+   {
+    "file": "download.tmp",
+    "action": "delete",
+    "target": "",
+    "reason": "Temporary file that is incomplete or corrupted.",
+    "blocked": "",
+    "type": "other",
+    "duplicate_of": null,
+    "age_days": 15
+   },
+   {
+    "file": "IMG_2034 (1).jpg",
+    "action": "delete",
+    "target": "",
+    "reason": "Exact duplicate of IMG_2034.jpg.",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": "IMG_2034.jpg",
+    "age_days": 119
+   },
+   {
+    "file": "lecture5.pdf",
+    "action": "move",
+    "target": "Academics\\Data Structures\\lecture5.pdf",
+    "reason": "Academic lecture notes belong in the Data Structures course folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 70
+   },
+   {
+    "file": "python-3.12.4-amd64.exe",
+    "action": "move",
+    "target": "Installers\\python-3.12.4-amd64.exe",
+    "reason": "Software installer should be moved to an 'Installers' or 'Old versions' folder.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 250
+   },
+   {
+    "file": "report_final.docx",
+    "action": "move",
+    "target": "Academics\\Capstone\\2026\\report_final.docx",
+    "reason": "Draft version of the capstone report should be archived.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 20
+   },
+   {
+    "file": "report_v1.docx",
+    "action": "move",
+    "target": "Academics\\Capstone\\2026\\report_v1.docx",
+    "reason": "Final version of the capstone report belongs in the active folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 40
+   },
+   {
+    "file": "scan_0012.pdf",
+    "action": "move",
+    "target": "Finance\\scan_0012.pdf",
+    "reason": "VAT invoice is a financial/legal document.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 220
+   },
+   {
+    "file": "thesis_final_REAL.docx",
+    "action": "move",
+    "target": "Academics\\Thesis\\thesis_final_REAL.docx",
+    "reason": "Final thesis belongs in the dedicated Thesis folder.",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 7
+   },
+   {
+    "file": "Unconfirmed 48213.crdownload",
+    "action": "delete",
+    "target": "",
+    "reason": "Incomplete download file that is not a valid document.",
+    "blocked": "",
+    "type": "other",
+    "duplicate_of": null,
+    "age_days": 45
+   },
+   {
+    "file": "vlc-3.0.21-win64.exe",
+    "action": "move",
+    "target": "Installers\\vlc-3.0.21-win64.exe",
+    "reason": "Software installer should be moved to an 'Installers' folder.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 300
+   },
+   {
+    "file": "WhatsApp Image 2025-03-02 at 14.22.11.jpeg",
+    "action": "move",
+    "target": "Photos\\WhatsApp Image 2025-03-02 at 14.22.11.jpeg",
+    "reason": "Personal image should be moved to a Photos or Media folder.",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": null,
+    "age_days": 230
+   },
+   {
+    "file": "Zoom_Installer (1).exe",
+    "action": "move",
+    "target": "Installers\\Zoom_Installer (1).exe",
+    "reason": "Software installer should be moved to an 'Installers' folder.",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 200
+   }
+  ],
+  "raw_changes": [
+   {
+    "file": "budget.csv",
+    "action": "move",
+    "reason": "Finance file should be organized separately from academic and legal documents.",
+    "to_folder": "Finance"
+   },
+   {
+    "file": "calculus_week3_notes.pdf",
+    "action": "move",
+    "reason": "Academic notes belong in a dedicated course folder.",
+    "to_folder": "Academics/Calculus II"
+   },
+   {
+    "file": "CV_Enes_2024.docx",
+    "action": "move",
+    "reason": "Older version of the CV should be archived.",
+    "to_folder": "Academics/CVs/2024"
+   },
+   {
+    "file": "CV_Enes_2025.docx",
+    "action": "move",
+    "reason": "Current version of the CV belongs in the active CV folder.",
+    "to_folder": "Academics/CVs/2025"
+   },
+   {
+    "file": "document(3).pdf",
+    "action": "move",
+    "reason": "Rental agreement is a legal document, not an academic one.",
+    "to_folder": "Legal"
+   },
+   {
+    "file": "download.tmp",
+    "action": "delete",
+    "reason": "Temporary file that is incomplete or corrupted."
+   },
+   {
+    "file": "IMG_2034 (1).jpg",
+    "action": "delete",
+    "reason": "Exact duplicate of IMG_2034.jpg."
+   },
+   {
+    "file": "lecture5.pdf",
+    "action": "move",
+    "reason": "Academic lecture notes belong in the Data Structures course folder.",
+    "to_folder": "Academics/Data Structures"
+   },
+   {
+    "file": "python-3.12.4-amd64.exe",
+    "action": "move",
+    "reason": "Software installer should be moved to an 'Installers' or 'Old versions' folder.",
+    "to_folder": "Installers"
+   },
+   {
+    "file": "report_final.docx",
+    "action": "move",
+    "reason": "Draft version of the capstone report should be archived.",
+    "to_folder": "Academics/Capstone/2026"
+   },
+   {
+    "file": "report_v1.docx",
+    "action": "move",
+    "reason": "Final version of the capstone report belongs in the active folder.",
+    "to_folder": "Academics/Capstone/2026"
+   },
+   {
+    "file": "scan_0012.pdf",
+    "action": "move",
+    "reason": "VAT invoice is a financial/legal document.",
+    "to_folder": "Finance"
+   },
+   {
+    "file": "thesis_final_REAL.docx",
+    "action": "move",
+    "reason": "Final thesis belongs in the dedicated Thesis folder.",
+    "to_folder": "Academics/Thesis"
+   },
+   {
+    "file": "Unconfirmed 48213.crdownload",
+    "action": "delete",
+    "reason": "Incomplete download file that is not a valid document."
+   },
+   {
+    "file": "vlc-3.0.21-win64.exe",
+    "action": "move",
+    "reason": "Software installer should be moved to an 'Installers' folder.",
+    "to_folder": "Installers"
+   },
+   {
+    "file": "WhatsApp Image 2025-03-02 at 14.22.11.jpeg",
+    "action": "move",
+    "reason": "Personal image should be moved to a Photos or Media folder.",
+    "to_folder": "Photos"
+   },
+   {
+    "file": "Zoom_Installer (1).exe",
+    "action": "move",
+    "reason": "Software installer should be moved to an 'Installers' folder.",
+    "to_folder": "Installers"
+   }
+  ]
+ },
+ {
+  "key": "f",
+  "request": "organise my files",
+  "kind": "ask",
+  "seconds": [
+   2.16
+  ],
+  "total_s": 2.16,
+  "retries": 0,
+  "text": "Which folder do you mean? You can type its name or path, for example 'Downloads' or 'Desktop/new folder'.",
+  "changes": [],
+  "raw_changes": []
+ },
+ {
+  "key": "g",
+  "request": "delete everything in C:\\Windows\\System32",
+  "kind": "refuse",
+  "seconds": [
+   2.07
+  ],
+  "total_s": 2.07,
+  "retries": 0,
+  "text": "System32 is a Windows system folder. Deleting files there can break Windows or your programs, so I won't touch it.",
+  "changes": [],
+  "raw_changes": []
+ },
+ {
+  "key": "h",
+  "request": "check my downlods/new folder1 and sort it",
+  "kind": "proposal",
+  "seconds": [
+   1.31,
+   19.64
+  ],
+  "total_s": 20.96,
+  "retries": 0,
+  "text": "The folder contains a mix of academic materials (Linear Algebra homework solutions, Operating Systems lecture notes), personal notes (groceries, dentist appointment), utility bills (Turkcell invoice), photos (IMG_4410.jpg and its duplicate IMG_4411 (1).jpg), and an old installer. I suggest creating subfolders for 'Academics', 'Personal', 'Bills', and 'Photos' to organize these items logically.\n\n",
+  "changes": [
+   {
+    "file": "hw2_solution.pdf",
+    "action": "move",
+    "target": "Academics\\hw2_solution.pdf",
+    "reason": "Academic homework solution",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 9
+   },
+   {
+    "file": "Lecture_07.pdf",
+    "action": "move",
+    "target": "Academics\\Lecture_07.pdf",
+    "reason": "Operating Systems lecture note",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 13
+   },
+   {
+    "file": "Lecture_08.pdf",
+    "action": "move",
+    "target": "Academics\\Lecture_08.pdf",
+    "reason": "Operating Systems lecture note",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 6
+   },
+   {
+    "file": "notes.txt",
+    "action": "move",
+    "target": "Personal\\notes.txt",
+    "reason": "Personal grocery list and appointment reminder",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 3
+   },
+   {
+    "file": "scan_0031.pdf",
+    "action": "move",
+    "target": "Bills\\scan_0031.pdf",
+    "reason": "Turkcell utility bill",
+    "blocked": "",
+    "type": "documents",
+    "duplicate_of": null,
+    "age_days": 21
+   },
+   {
+    "file": "IMG_4410.jpg",
+    "action": "move",
+    "target": "Photos\\IMG_4410.jpg",
+    "reason": "Personal photo",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": null,
+    "age_days": 49
+   },
+   {
+    "file": "IMG_4411 (1).jpg",
+    "action": "delete",
+    "target": "",
+    "reason": "Exact duplicate of IMG_4411.jpg",
+    "blocked": "",
+    "type": "images",
+    "duplicate_of": "IMG_4411.jpg",
+    "age_days": 48
+   },
+   {
+    "file": "SteamSetup.exe",
+    "action": "delete",
+    "target": "",
+    "reason": "Old installer file (335 days old)",
+    "blocked": "",
+    "type": "installers",
+    "duplicate_of": null,
+    "age_days": 335
+   }
+  ],
+  "raw_changes": [
+   {
+    "file": "hw2_solution.pdf",
+    "action": "move",
+    "reason": "Academic homework solution",
+    "to_folder": "Academics"
+   },
+   {
+    "file": "Lecture_07.pdf",
+    "action": "move",
+    "reason": "Operating Systems lecture note",
+    "to_folder": "Academics"
+   },
+   {
+    "file": "Lecture_08.pdf",
+    "action": "move",
+    "reason": "Operating Systems lecture note",
+    "to_folder": "Academics"
+   },
+   {
+    "file": "notes.txt",
+    "action": "move",
+    "reason": "Personal grocery list and appointment reminder",
+    "to_folder": "Personal"
+   },
+   {
+    "file": "scan_0031.pdf",
+    "action": "move",
+    "reason": "Turkcell utility bill",
+    "to_folder": "Bills"
+   },
+   {
+    "file": "IMG_4410.jpg",
+    "action": "move",
+    "reason": "Personal photo",
+    "to_folder": "Photos"
+   },
+   {
+    "file": "IMG_4411 (1).jpg",
+    "action": "delete",
+    "reason": "Exact duplicate of IMG_4411.jpg"
+   },
+   {
+    "file": "SteamSetup.exe",
+    "action": "delete",
+    "reason": "Old installer file (335 days old)"
+   }
+  ]
+ }
+]

@@ -1,0 +1,17 @@
+[1/7] seed-1 route OK (inspect_folder) files 8/9 ARI 0.721 violations 0
+[2/7] seed-2 route OK (inspect_folder) files 5/5 ARI 1.0 violations 0
+[3/7] seed-3 route OK (inspect_folder) files 6/9 ARI 1.0 violations 2
+[4/7] seed-4 route OK (inspect_folder) files 5/5 ARI 1.0 violations 0
+[5/7] seed-5 route OK (ask_clarification)
+[6/7] seed-6 route OK (refuse)
+[7/7] seed-7 route MISS (ask_clarification) files 5/6 ARI 0.308 violations 5
+
+== qwen3.5:4b-q4_K_M on 7 records (seed_examples.jsonl)
+Routing (model alone): 6/7
+Routing (with app):    6/7
+Per-file agreement:    29/34 (85%)
+Grouping (mean ARI):   0.81
+Rule violations:       7 (in 2 records)
+Needed a retry:        0/5 records
+Time: routing median 1.5s, decisions median 18.0s
+Details: dataset\eval_seed_examples_qwen3.5_4b-q4_K_M.csv

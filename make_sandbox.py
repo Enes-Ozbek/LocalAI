@@ -1,6 +1,8 @@
 """Creates a fake, messy set of folders to test on, so you never test on your real files.
 
-    python make_sandbox.py            # creates sandbox/Downloads, sandbox/Downloads/New folder1, sandbox/Desktop
+    python make_sandbox.py            # creates sandbox/Downloads, sandbox/Downloads/New folder1, sandbox/Desktop,
+                                      # sandbox/Archive (a big folder: 160 files for bulk jobs and search),
+                                      # and empty sandbox/Documents and sandbox/Pictures to move files into
     python cli.py --base sandbox      # then 'Downloads' means sandbox/Downloads
 
 Run it again any time to reset the sandbox.
@@ -87,16 +89,64 @@ FILES = [
 ]
 
 
+COURSES = ["CSE 301 Operating Systems", "CSE 302 Data Structures", "MATH 201 Linear Algebra", "PHYS 102 Physics II",
+           "CSE 401 Machine Learning", "CSE 315 Databases"]
+BILLS = ["FATURA Turkcell Iletisim Hizmetleri", "FATURA Vodafone Net", "FATURA IGDAS Dogalgaz", "FATURA CK Bogazici Elektrik"]
+
+
+def archive_files() -> list:
+    """A big, messy folder like years of downloads: photos (some copied twice), screenshots, lecture notes,
+    bills, installers, unfinished downloads and a few old CVs. Same files every time."""
+    r = random.Random(7)
+    out = []
+    for i in range(70):
+        age = r.randint(3, 1100)
+        out.append(("Archive", f"IMG_{3000 + i}.jpg", None, age))
+        if i % 9 == 0:
+            out.append(("Archive", f"IMG_{3000 + i} (1).jpg", f"dup:IMG_{3000 + i}.jpg", age - 1))
+    for i in range(20):
+        age = r.randint(1, 700)
+        day = time.strftime("%Y-%m-%d", time.localtime(time.time() - age * DAY))
+        out.append(("Archive", f"Screenshot {day} {r.randint(100000, 235959)}.png", None, age))
+    for i in range(24):
+        course = COURSES[i % len(COURSES)]
+        out.append(("Archive", f"lecture_{i % len(COURSES) + 1:02}_{i // len(COURSES) + 1}.pdf",
+                    f"{course} - Lecture {i // len(COURSES) + 1}", r.randint(20, 800)))
+    for i in range(12):
+        bill = BILLS[i % len(BILLS)]
+        out.append(("Archive", f"scan_{100 + i:04}.pdf", f"{bill} Fatura tarihi {1 + i % 28:02}.{1 + i % 12:02}.2025 "
+                    f"Toplam {r.randint(150, 900)},{r.randint(0, 99):02} TL", r.randint(30, 600)))
+    for name in ("Discord_Setup.exe", "Spotify_Installer.exe", "node-v20.11.0-x64.msi", "Steam_Setup (1).exe",
+                 "7z2301-x64.exe", "Git-2.44.0-64-bit.exe", "AnyDesk.exe", "OBS-Studio-30.0-Windows-Installer.exe"):
+        out.append(("Archive", name, None, r.randint(60, 900)))
+    for i in range(7):
+        out.append(("Archive", f"download ({i}).tmp" if i % 2 else f"Unconfirmed {r.randint(10000, 99999)}.crdownload",
+                    None, r.randint(2, 300)))
+    out += [("Archive", "Resume_Kaan_2023.docx", "Resume - Kaan. Experience: intern at a software company. "
+             "Education: Computer Engineering", 600),
+            ("Archive", "CV_old_2022.docx", "Curriculum Vitae 2022 - Enes. Education: high school, Computer Engineering",
+             900),
+            ("Archive", "rental_contract_2024.pdf", "Rental agreement between landlord and tenant, Kadikoy, 2024", 500),
+            ("Archive", "bank_statement_2025_06.pdf", "Account statement June 2025, Ziraat Bankasi", 140),
+            ("Archive", "tax_return_2024.pdf", "Income tax return 2024 - declaration", 300),
+            ("Archive", "meeting_notes.txt", "capstone meeting: split the work, Kaan does the UI, Enes the model", 8),
+            ("Archive", "shopping_list.txt", "milk, bread, coffee", 40),
+            ("Archive", "trip_istanbul_2023.zip", None, 700), ("Archive", "old_projects.zip", None, 650),
+            ("Archive", "holiday_video_2024.mp4", None, 400), ("Archive", "podcast_ep12.mp3", None, 200)]
+    return out
+
+
 def main():
     if ROOT.exists():
         shutil.rmtree(ROOT)
     random.seed(1)
     now = time.time()
-    for folder, name, content, age in FILES:
+    for folder, name, content, age in FILES + archive_files():
         path = ROOT / folder / name
         path.parent.mkdir(parents=True, exist_ok=True)
         if content is None:
-            path.write_bytes(random.randbytes(random.randint(2_000, 60_000)))
+            path.write_bytes(random.randbytes(random.randint(2_000, 60_000) if folder != "Archive" else
+                                              random.randint(1_000, 12_000)))
         elif content.startswith("dup:"):
             path.write_bytes((path.parent / content[4:]).read_bytes())
         elif name.endswith(".pdf"):
@@ -107,7 +157,9 @@ def main():
             path.write_text(content, encoding="utf-8")
         t = now - age * DAY
         os.utime(path, (t, t))
-    print(f"Created {len(FILES)} files under {ROOT.resolve()}")
+    for empty in ("Documents", "Pictures"):
+        (ROOT / empty).mkdir()
+    print(f"Created {len(FILES) + len(archive_files())} files under {ROOT.resolve()}")
 
 
 if __name__ == "__main__":

@@ -78,7 +78,7 @@ def app_route(first, user: str) -> str:
     if name != "inspect_folder":
         return name
     folder = args.get("folder", "")
-    if safety.is_protected(scanner.resolve_folder(folder, Path.home())):
+    if safety.is_protected(scanner.resolve_folder(folder, Path.home())) or safety.names_system_folder(folder):
         return "refuse"
     if not safety.names_folder(folder, user):
         return "ask_clarification"
@@ -144,7 +144,7 @@ def main():
         print(f"[{i}/{len(records)}] {row['id'] or i} route {'OK' if row['route_ok'] else 'MISS'} "
               f"({row['route']}){extra}")
 
-    out = Path(args.records).with_name(f"eval_{Path(args.records).stem}_{args.model.replace(':', '_').replace('/', '_')}.csv")
+    out = Path(args.records).with_name(f"eval_{Path(args.records).stem}_{llm.label(args.model).replace(':', '_').replace('/', '_')}.csv")
     with open(out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=sorted({k for r in rows for k in r}))
         w.writeheader()

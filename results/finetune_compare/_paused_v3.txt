@@ -1,0 +1,23 @@
+v3 retrain comparison: PAUSED at Enes's request (game running), 2026-10-23 about 01:55 local time.
+
+Done:
+- r8 model joined and hash-checked: models\assistant-r8.Q4_K_M.gguf
+  (SHA-256 5f0559100b4a396e..., matches Colab's B7 line, 9 parts, 2,783,446,848 bytes).
+- Test sets in place: dataset\test_r8.jsonl = dataset\test.jsonl (9382bbd88056adf8, 25 records),
+  dataset\test_r7.jsonl (13b613487059a75a, 7 records).
+
+Partial (not saved as a results file; the driver writes JSON only at the end of a run):
+- v3_base (Ollama), sandbox request (a) only: proposal, 7 steps, 0 blocked,
+  seconds [33.22, 101.61, 96.99]. Timing CONTAMINATED: a game was using the GPU.
+  Stopped during request (b). See _log_v3_part1.txt.
+
+Left to do (all on the GPU; start only when Enes says to continue):
+1. v3_base: Ollama, 8 sandbox requests + evaluate test_r8 + test_r7
+   compare_run.py v3_base --ollama --evals test_r8,test_r7
+2. v3_r7: llama-server with models\assistant-r7.Q4_K_M.gguf, same
+   compare_run.py v3_r7 --evals test_r8,test_r7
+3. v3_r8: llama-server with models\assistant-r8.Q4_K_M.gguf, same
+   compare_run.py v3_r8 --evals test_r8,test_r7
+4. compare_v3.py v3_base v3_r7 v3_r8, then write results\v3_retrain_comparison.md
+Scripts are in the scratchpad: chain_v3_base_r7.ps1, chain_v3_r8.ps1, compare_run.py, compare_v3.py.
+Restart from step 1 (request (a) will be rerun, so timings are clean if the GPU is free).
