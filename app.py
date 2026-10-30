@@ -22,6 +22,8 @@ from pathlib import Path
 from assistant import agent, executor, llm, safety, scanner
 
 PAGE = Path(__file__).resolve().parent / "assistant" / "app.html"
+FONTS = {name: PAGE.parent / "fonts" / name for name in ("figtree-latin.woff2", "figtree-latin-ext.woff2")}
+MAX_LISTED = 2000  # files of the folder sent to the page for the After window
 TOKEN = secrets.token_urlsafe(16)  # only the page this app served can call the API
 EXAMPLES = [
     ("check files in my downloads/new folder1 and tell me what those are then organise them",
@@ -102,10 +104,19 @@ class App:
 
     def _result(self, r, by_path: bool = False) -> dict:
         return {"kind": r.kind, "text": r.text, "seconds": r.seconds, "question": bool(r.tools or r.by_code),
-                "folder": self._show(r.folder) if r.folder else "",
+                "folder": self._show(r.folder) if r.folder else "", "picked": by_path,
+                "here": self._contents(r.folder) if r.kind == "proposal" else None,
                 "steps": [self._step(i, s, r.folder, self.base if by_path else None) for i, s in enumerate(r.steps)],
                 "blocked": [{"file": b.get("file", ""), "action": b.get("action", ""), "why": b["blocked"]}
                             for b in r.blocked]}
+
+    @staticmethod
+    def _contents(folder: Path) -> dict:
+        """What the folder holds now, so the page can draw it as it will be after the plan."""
+        if folder is None or not folder.is_dir():
+            return {"files": [], "folders": [], "exists": False}
+        return {"files": [p.name for p in scanner.files_in(folder)[:MAX_LISTED]],
+                "folders": scanner.subfolders_of(folder), "exists": True}
 
     def apply(self, selected: list) -> dict:
         if self.last is None:
@@ -133,16 +144,21 @@ class App:
         """base: show where each file comes from (search results come from many folders)."""
         src = Path(s["src"])
         name = str(src.relative_to(base)) if base and src.is_relative_to(base) else str(src) if base else src.name
+        # for the After window: the file's own name, whether it is in the folder now, and where it ends up in it
+        where = {"name": src.name, "from_here": src.parent == folder, "to_dir": None, "new_name": src.name}
         if s["op"] == "recycle":
-            return {"i": i, "action": "delete", "file": name, "target": "Recycle Bin", "reason": s["reason"]}
+            return {"i": i, "action": "delete", "file": name, "target": "Recycle Bin", "reason": s["reason"]} | where
         dst = Path(s["dst"])
+        if dst.parent.is_relative_to(folder):  # None: it leaves the folder
+            where["to_dir"] = "" if dst.parent == folder else dst.parent.relative_to(folder).as_posix()
+        where["new_name"] = dst.name
         renamed = dst.name != src.name
         action = "rename" if dst.parent == src.parent else ("move+rename" if renamed else "move")
         if base:
             target = dst.relative_to(base) if dst.is_relative_to(base) else dst
         else:
             target = dst.relative_to(folder) if dst.is_relative_to(folder) else dst  # full path when it leaves the folder
-        return {"i": i, "action": action, "file": name, "target": str(target), "reason": s["reason"]}
+        return {"i": i, "action": action, "file": name, "target": str(target), "reason": s["reason"]} | where
 
 
 def handler(app: App, port: int):
@@ -156,6 +172,8 @@ def handler(app: App, port: int):
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
+            if self.headers.get("Host") in hosts and self.path.startswith("/fonts/") and self.path[7:] in FONTS:
+                return self._send(200, FONTS[self.path[7:]].read_bytes(), "font/woff2", cache=True)
             if self.headers.get("Host") not in hosts or self.path != "/":
                 return self._send(404, b"Not found", "text/plain")
             page = PAGE.read_text(encoding="utf-8").replace("__TOKEN__", TOKEN)
@@ -180,11 +198,11 @@ def handler(app: App, port: int):
                     busy.release()
             self._send(200, json.dumps(out, ensure_ascii=False).encode("utf-8"), "application/json")
 
-        def _send(self, code, data, kind):
+        def _send(self, code, data, kind, cache=False):
             self.send_response(code)
             self.send_header("Content-Type", kind)
             self.send_header("Content-Length", str(len(data)))
-            self.send_header("Cache-Control", "no-store")
+            self.send_header("Cache-Control", "max-age=86400" if cache else "no-store")
             self.end_headers()
             self.wfile.write(data)
 

@@ -52,9 +52,15 @@ Without `--base`, folder names mean your real folders (C:\Users\you\Downloads an
 python app.py --base sandbox        # opens http://127.0.0.1:8765 in your browser
 ```
 
-The same assistant with a window: pick an example or type a request, read the explanation, untick any change
-you don't want in the preview, then press Apply. "Undo last run" reverses the last applied changes. The page is
-served on this PC only, and only the page the app opened can use it. Press Ctrl+C in the terminal to quit.
+The same assistant with a window: pick an example or type a request in the box at the top. A plan is shown like
+a folder window: on the left the folder now, one row per file with a checkbox and where it goes; on the right the
+folder after the plan, in big folder and file icons (new folders marked "New", renamed files "Renamed", deletes on
+one "Going to the Recycle Bin" line). Double-click a folder to look inside, click anything to see why. The right side
+is worked out from your ticks, so it changes the moment you untick a file. Nothing is written until you press Apply;
+then the page shows the folder as it is now, with Undo. "Undo last run" (top right) reverses the last applied
+changes. Questions and search results get their own screens. The page is served on this PC only, only the page the
+app opened can use it, and nothing is loaded from the internet (the Figtree font is in `assistant/fonts`, SIL Open
+Font License). Light and dark follow Windows. Press Ctrl+C in the terminal to quit.
 Options as for `cli.py` (`--base`, `--model`), plus `--port` and `--no-browser`.
 
 Or double-click `Folder Assistant.bat`: it asks whether to use the test sandbox (Enter) or your real folders
@@ -101,7 +107,7 @@ At most 10 parts (400 files) per request.
 | `assistant/search.py` | Search without the chat model: your user folders (wherever Windows keeps them, also in OneDrive) and their subfolders, or the folder the request names ("in downloads"). Scores the name, the folders and the first text of documents; with an embedding model also the meaning ("resume" finds a CV). Document text and meanings are kept in `~\.local-assistant\search.sqlite` |
 | `assistant/executor.py` | Preview, run (Recycle Bin for deletes), undo log in `~\.local-assistant\undo` |
 | `cli.py` | Terminal chat |
-| `app.py`, `assistant/app.html`, `Folder Assistant.bat` | The app window: a page on 127.0.0.1 for the same request, preview, apply and undo; the .bat opens it with a double-click |
+| `app.py`, `assistant/app.html`, `assistant/fonts/`, `Folder Assistant.bat` | The app window: a page on 127.0.0.1 for the same request, a before/after folder view, apply and undo; the .bat opens it with a double-click |
 | `make_sandbox.py` | Fake messy folders for testing |
 
 ## Building the training data
