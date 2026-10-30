@@ -3,7 +3,7 @@
 Type a request like *"check files in my downloads/new folder1 and tell me what those are then organise them"*.
 The assistant looks at the folder, explains what the files are, and proposes moves, renames and deletes,
 with a reason for each one. Nothing changes until you confirm, deletes go to the Recycle Bin, and
-`undo` reverses the last run. Folders of any size work (big ones go to the model 40 files at a time).
+`undo` reverses the last run, and takes deleted files back out of the Recycle Bin. Folders of any size work (big ones go to the model 40 files at a time).
 Questions like *"how many files are there?"*, *"what's the biggest file in archive?"* or *"find my CV"* are
 answered by the model with read-only tools: it decides what to look at, code counts, sorts and searches exactly.
 It remembers the conversation, so *"and desktop?"* or *"organize it"* work as follow-ups. Everything runs on
@@ -58,7 +58,9 @@ folder after the plan, in big folder and file icons (new folders marked "New", r
 one "Going to the Recycle Bin" line). Double-click a folder to look inside, click anything to see why. The right side
 is worked out from your ticks, so it changes the moment you untick a file. Nothing is written until you press Apply;
 then the page shows the folder as it is now, with Undo. "Undo last run" (top right) reverses the last applied
-changes. Questions and search results get their own screens. The page is served on this PC only, only the page the
+changes, deleted files included (they come back out of the Recycle Bin, as long as it hasn't been emptied).
+A request runs in the app, not in the page: the page shows a progress bar and the time, and if you reload it or
+open a second window, it shows the request that is still running instead of starting another. Questions and search results get their own screens. The page is served on this PC only, only the page the
 app opened can use it, and nothing is loaded from the internet (the Figtree font is in `assistant/fonts`, SIL Open
 Font License). Light and dark follow Windows. Press Ctrl+C in the terminal to quit.
 Options as for `cli.py` (`--base`, `--model`), plus `--port` and `--no-browser`.
@@ -105,7 +107,7 @@ At most 10 parts (400 files) per request.
 | `assistant/filters.py` | Reads which files a request is about: kinds, extensions, names, dates, sizes. Folder names ("move the pdfs to documents") are not kinds of file |
 | `assistant/answers.py` | The read-only tools for questions (list, summary, search) and the code answers used when the model doesn't look |
 | `assistant/search.py` | Search without the chat model: your user folders (wherever Windows keeps them, also in OneDrive) and their subfolders, or the folder the request names ("in downloads"). Scores the name, the folders and the first text of documents; with an embedding model also the meaning ("resume" finds a CV). Document text and meanings are kept in `~\.local-assistant\search.sqlite` |
-| `assistant/executor.py` | Preview, run (Recycle Bin for deletes), undo log in `~\.local-assistant\undo` |
+| `assistant/executor.py` | Preview, run (Recycle Bin for deletes), undo log in `~\.local-assistant\undo`; undo moves files back and restores deleted ones from the Recycle Bin (it reads the bin's `$I` entries; on Linux the trash's `.trashinfo` files) |
 | `cli.py` | Terminal chat |
 | `app.py`, `assistant/app.html`, `assistant/fonts/`, `Folder Assistant.bat` | The app window: a page on 127.0.0.1 for the same request, a before/after folder view, apply and undo; the .bat opens it with a double-click |
 | `make_sandbox.py` | Fake messy folders for testing |

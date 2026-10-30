@@ -15,6 +15,7 @@ import secrets
 import socket
 import subprocess
 import threading
+import time
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -24,6 +25,7 @@ from assistant import agent, executor, llm, safety, scanner
 PAGE = Path(__file__).resolve().parent / "assistant" / "app.html"
 FONTS = {name: PAGE.parent / "fonts" / name for name in ("figtree-latin.woff2", "figtree-latin-ext.woff2")}
 MAX_LISTED = 2000  # files of the folder sent to the page for the After window
+VERSION = 2        # the page checks it: an app started before an update serves the new page with old code
 TOKEN = secrets.token_urlsafe(16)  # only the page this app served can call the API
 EXAMPLES = [
     ("check files in my downloads/new folder1 and tell me what those are then organise them",
@@ -42,12 +44,48 @@ class App:
         self.last = None  # the latest proposal, so Apply runs exactly what was shown
         self.found = []   # the latest search results: the page refers to them by number only
         self.progress = ""
+        self.lock = threading.Lock()  # one model request or file change at a time
+        self.job = None   # the latest request: it runs in the background and the page follows it with status()
         self.session = agent.Session(base, model)  # remembers the conversation: 'how many files are there now?'
 
     def info(self) -> dict:
-        return {"model": llm.label(self.model), "backend": llm.BACKEND, "base": str(self.base),
-                "sandbox": self.base.name.lower() == "sandbox",
+        return {"version": VERSION, "model": llm.label(self.model), "backend": llm.BACKEND, "base": str(self.base),
+                "sandbox": self.base.name.lower() == "sandbox", "status": self.status(),
                 "examples": [{"text": t, "hint": h} for t, h in EXAMPLES]}
+
+    def start(self, text: str) -> dict:
+        """Starts a request in the background and returns at once. A request already running is not stopped: the
+        answer says which one it is, so the page can follow that one (after a reload, or from a second window)."""
+        if not text:
+            return {"error": "Type a request first."}
+        if not self.lock.acquire(blocking=False):
+            return {"busy": True, **self.status()}
+        job = self.job = {"id": (self.job or {}).get("id", 0) + 1, "text": text, "started": time.time(), "result": None}
+
+        def work():
+            try:
+                out = self.run(text)
+            except Exception as e:  # shown in the page instead of a request that never ends
+                out = {"error": f"{type(e).__name__}: {e}"}
+            finally:
+                self.lock.release()
+            job["result"] = out
+
+        threading.Thread(target=work, daemon=True).start()
+        return {"started": job["id"], **self.status()}
+
+    def status(self) -> dict:
+        """The latest request: still running (with what it is doing and for how long) or its result."""
+        job = self.job
+        if job is None:
+            return {"id": 0, "running": False}
+        return {"id": job["id"], "text": job["text"], "running": job["result"] is None, "progress": self.progress,
+                "seconds": round(time.time() - job["started"]), "result": job["result"]}
+
+    def busy_text(self) -> str:
+        job = self.job
+        return f"Still working on “{job['text']}”. Wait for it to finish." if job and job["result"] is None \
+            else "Still busy with the previous change. Try again in a moment."
 
     def run(self, text: str) -> dict:
         self.progress = ""
@@ -163,12 +201,17 @@ class App:
 
 def handler(app: App, port: int):
     hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
-    busy = threading.Lock()
-    routes = {"/api/info": lambda body: app.info(), "/api/run": lambda body: app.run(body.get("text", "").strip()),
+    routes = {"/api/info": lambda body: app.info(), "/api/run": lambda body: app.start(body.get("text", "").strip()),
               "/api/apply": lambda body: app.apply(body.get("selected", [])), "/api/undo": lambda body: app.undo(),
               "/api/act": lambda body: app.act(body.get("selected", []), body.get("action", ""), body.get("to", "")),
               "/api/open": lambda body: app.open(body.get("i")),
-              "/api/progress": lambda body: {"text": app.progress}}
+              "/api/progress": lambda body: app.status()}
+
+    def call(path, body):
+        try:
+            return routes[path](body)
+        except Exception as e:  # show the error in the page instead of a broken connection
+            return {"error": f"{type(e).__name__}: {e}"}
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -184,18 +227,21 @@ def handler(app: App, port: int):
             if self.headers.get("Host") not in hosts or self.headers.get("X-Token") != TOKEN \
                     or self.path not in routes:
                 return self._send(403, b"Forbidden", "text/plain")
-            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
-            if self.path in ("/api/info", "/api/progress"):  # answered while a request is running
-                out = routes[self.path](body)
-            elif not busy.acquire(blocking=False):  # one model request or file change at a time
-                out = {"error": "Still working on the previous request. Wait for it to finish."}
+            try:
+                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
+            except ValueError:
+                body = None
+            if not isinstance(body, dict):
+                out = {"error": "The page sent something the app can't read. Reload the page."}
+            elif self.path in ("/api/info", "/api/progress", "/api/run"):  # run starts in the background by itself
+                out = call(self.path, body)
+            elif not app.lock.acquire(blocking=False):  # one model request or file change at a time
+                out = {"error": app.busy_text(), "busy": True}
             else:
                 try:
-                    out = routes[self.path](body)
-                except Exception as e:  # show the error in the page instead of a broken connection
-                    out = {"error": f"{type(e).__name__}: {e}"}
+                    out = call(self.path, body)
                 finally:
-                    busy.release()
+                    app.lock.release()
             self._send(200, json.dumps(out, ensure_ascii=False).encode("utf-8"), "application/json")
 
         def _send(self, code, data, kind, cache=False):

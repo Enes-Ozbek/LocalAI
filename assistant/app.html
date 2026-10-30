@@ -124,6 +124,14 @@ html, body { margin: 0; min-height: 100%; }
 .fv-text { padding: var(--space-4); white-space: pre-wrap; overflow-wrap: anywhere; }
 .fv-text.say { max-height: 260px; overflow-y: auto; }
 
+/* progress while a request runs */
+.fv-track { padding: 0 var(--space-4) var(--space-4); }
+.fa-progress { position: relative; height: 6px; border-radius: var(--radius-pill); background: var(--line); overflow: hidden; }
+.fa-progress .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: var(--accent); transition: width .4s; }
+.fa-progress.indeterminate .fill { width: 30%; animation: fa-slide 1.4s ease-in-out infinite; }
+@keyframes fa-slide { from { left: -30%; } to { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { .fa-progress.indeterminate .fill { animation-duration: 4s; } }
+
 /* Now: a list */
 .fv-list { list-style: none; margin: 0; padding: 6px 0; max-height: 560px; overflow-y: auto; }
 .fv-row { display: flex; align-items: center; gap: var(--space-3); padding: 7px var(--space-4); cursor: pointer; }
@@ -293,31 +301,64 @@ async function send(text) {
   text = (text ?? input.value).trim();
   if (!text || busy) return;
   input.value = text;
-  const progress = el("span", {}, "Reading the folder and asking the model.");
-  const clock = el("span", { class: "fa-small fa-muted" }, "0 s");
-  show(head("Working on it", "This can take up to a minute. Nothing on disk changes until you press Apply."),
-    el("section", { class: "fv-win" },
-      el("div", { class: "fv-bar" }, el("span", { class: "which" }, "Your request"), el("span", { class: "grow" }), clock),
-      el("div", { class: "fv-text" }, text),
-      el("div", { class: "fv-status" }, progress)));
   setBusy(true);
-  const started = Date.now();
-  // big folders go to the model in parts: show which one it is on
-  const timer = setInterval(() => {
-    clock.textContent = Math.round((Date.now() - started) / 1000) + " s";
-    api("/api/progress").then(p => { if (p.text) progress.textContent = p.text; }).catch(() => {});
-  }, 1000);
   try {
     const r = await api("/api/run", { text });
-    if (r.error) show(head("Something went wrong", r.error), newRequest());
-    else result(r);
+    if (r.error) { setBusy(false); return show(head("Something went wrong", r.error), newRequest()); }
+    follow(r.busy ? "Your earlier request is still running. Its answer comes first; send this one again after it." : "");
   } catch (e) {
-    notAnswering(e);
-  } finally {
-    clearInterval(timer);
     setBusy(false);
+    notAnswering(e);
   }
 }
+
+// The request runs in the app, not in this page: the page asks every second how it is going, so a reload or a
+// second window picks up the same request instead of starting another one.
+let following = 0;
+async function follow(note) {
+  const me = ++following;
+  setBusy(true);
+  const asked = el("div", { class: "fv-text" });
+  const fillBar = el("div", { class: "fill" });
+  const track = el("div", { class: "fa-progress indeterminate", role: "progressbar", "aria-label": "Working" }, fillBar);
+  const step = el("span", {}, "Reading the folder and asking the model.");
+  const clock = el("span", { class: "fa-small fa-muted" }, "0 s");
+  show(head("Working on it", "This can take up to a minute. Nothing on disk changes until you press Apply."),
+    note ? el("div", { class: "fv-note", role: "status" }, note) : null,
+    el("section", { class: "fv-win" },
+      el("div", { class: "fv-bar" }, el("span", { class: "which" }, "Your request"), el("span", { class: "grow" }), clock),
+      asked, el("div", { class: "fv-track" }, track),
+      el("div", { class: "fv-status" }, step)));
+  let misses = 0;
+  while (me === following) {
+    let st;
+    try {
+      st = await api("/api/progress");
+      misses = 0;
+    } catch (e) {
+      if (++misses >= 5) { following = 0; setBusy(false); return notAnswering(e); }  // about 5 s without an answer
+      await pause(1000);
+      continue;
+    }
+    if (me !== following) return;
+    if (!st.running) {
+      setBusy(false);
+      if (!st.result) return home();
+      if (st.result.error) return show(head("Something went wrong", st.result.error), newRequest());
+      return result(st.result);
+    }
+    asked.textContent = st.text;
+    if (!input.value) input.value = st.text;
+    clock.textContent = st.seconds + " s";
+    if (st.progress) step.textContent = st.progress;
+    // big folders go in parts and search reads documents: "part 2 of 4", "(40 of 120)" fill the bar
+    const m = /(\d+) of (\d+)/.exec(st.progress || "");
+    track.classList.toggle("indeterminate", !m);
+    fillBar.style.width = m ? Math.min(100, Math.max(4, 100 * (+m[1] - (/part/i.test(st.progress) ? 0.5 : 0)) / +m[2])) + "%" : "";
+    await pause(1000);
+  }
+}
+function pause(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function result(r) {
   const seconds = r.seconds.length ? "answered in " + r.seconds.reduce((a, b) => a + b, 0).toFixed(1) + " s" : "";
@@ -489,7 +530,7 @@ function planView(r, seconds) {
     // heading
     if (st.done) {
       title.textContent = "Done. This is " + here + " now.";
-      sub.textContent = a.bin.length ? "Deleted files are in the Recycle Bin, and Undo puts everything back." : "Undo puts everything back.";
+      sub.textContent = a.bin.length ? "Deleted files are in the Recycle Bin. Undo puts everything back, deleted files too." : "Undo puts everything back.";
     } else {
       const tidy = items.some(f => f.toDir || f.as);
       title.textContent = !items.length ? "No changes to make" : "Here’s " + here + " after " + (tidy && !r.picked ? "tidying" : "the change");
@@ -598,7 +639,7 @@ function planView(r, seconds) {
       fill(note);
       try {
         const x = await api("/api/apply", { selected: items.filter(f => f.on).map(f => f.i) });
-        if (x.error) fill(note, el("b", {}, "Not applied. "), x.error);
+        if (x.error) fill(note, el("b", {}, "Not applied. "), x.error, x.busy ? " Nothing on disk has changed." : null);
         else { st.done = x; st.open = st.select = null; }
       } catch (e) {
         fill(note, el("b", {}, "The app is not answering. "), e.message);
@@ -682,13 +723,17 @@ function searchView(r, seconds) {
 async function undo() {
   if (busy) return;
   setBusy(true);
+  let r;
   try {
-    const r = await api("/api/undo");
-    show(head(r.error ? "Undo failed" : "Undo last run", r.error || r.message), newRequest());
+    r = await api("/api/undo");
   } catch (e) {
-    notAnswering(e);
+    setBusy(false);
+    return notAnswering(e);
   }
   setBusy(false);
+  if (r.busy) return follow("Undo has to wait: " + lower1(r.error));
+  show(head(r.error ? "Undo failed" : r.message === "Nothing to undo." ? "Nothing to undo" : "Undone",
+            r.error || (r.message === "Nothing to undo." ? "No run of this app is left to undo." : r.message)), newRequest());
 }
 
 document.getElementById("form").addEventListener("submit", e => { e.preventDefault(); send(); });
@@ -696,8 +741,14 @@ undoBtn.addEventListener("click", undo);
 
 api("/api/info").then(r => {
   info = r;
+  if (r.version !== 2) {  // the window is new but the app running in the background is not
+    setBusy(true);
+    return show(head("Restart the app", "This window was updated, but the app that was already running is the old one. " +
+      "Close the black Folder Assistant window (or press Ctrl+C in it), then open Folder Assistant.bat again."));
+  }
   document.getElementById("sandbox").hidden = !r.sandbox;
-  home();
+  if (r.status.running) follow();
+  else home();
 }).catch(notAnswering);
 home();
 input.focus();
