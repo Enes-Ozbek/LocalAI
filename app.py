@@ -15,6 +15,7 @@ import secrets
 import socket
 import subprocess
 import threading
+import time
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -22,6 +23,9 @@ from pathlib import Path
 from assistant import agent, executor, llm, safety, scanner
 
 PAGE = Path(__file__).resolve().parent / "assistant" / "app.html"
+FONTS = {name: PAGE.parent / "fonts" / name for name in ("figtree-latin.woff2", "figtree-latin-ext.woff2")}
+MAX_LISTED = 2000  # files of the folder sent to the page for the After window
+VERSION = 2        # the page checks it: an app started before an update serves the new page with old code
 TOKEN = secrets.token_urlsafe(16)  # only the page this app served can call the API
 EXAMPLES = [
     ("check files in my downloads/new folder1 and tell me what those are then organise them",
@@ -40,12 +44,48 @@ class App:
         self.last = None  # the latest proposal, so Apply runs exactly what was shown
         self.found = []   # the latest search results: the page refers to them by number only
         self.progress = ""
+        self.lock = threading.Lock()  # one model request or file change at a time
+        self.job = None   # the latest request: it runs in the background and the page follows it with status()
         self.session = agent.Session(base, model)  # remembers the conversation: 'how many files are there now?'
 
     def info(self) -> dict:
-        return {"model": llm.label(self.model), "backend": llm.BACKEND, "base": str(self.base),
-                "sandbox": self.base.name.lower() == "sandbox",
+        return {"version": VERSION, "model": llm.label(self.model), "backend": llm.BACKEND, "base": str(self.base),
+                "sandbox": self.base.name.lower() == "sandbox", "status": self.status(),
                 "examples": [{"text": t, "hint": h} for t, h in EXAMPLES]}
+
+    def start(self, text: str) -> dict:
+        """Starts a request in the background and returns at once. A request already running is not stopped: the
+        answer says which one it is, so the page can follow that one (after a reload, or from a second window)."""
+        if not text:
+            return {"error": "Type a request first."}
+        if not self.lock.acquire(blocking=False):
+            return {"busy": True, **self.status()}
+        job = self.job = {"id": (self.job or {}).get("id", 0) + 1, "text": text, "started": time.time(), "result": None}
+
+        def work():
+            try:
+                out = self.run(text)
+            except Exception as e:  # shown in the page instead of a request that never ends
+                out = {"error": f"{type(e).__name__}: {e}"}
+            finally:
+                self.lock.release()
+            job["result"] = out
+
+        threading.Thread(target=work, daemon=True).start()
+        return {"started": job["id"], **self.status()}
+
+    def status(self) -> dict:
+        """The latest request: still running (with what it is doing and for how long) or its result."""
+        job = self.job
+        if job is None:
+            return {"id": 0, "running": False}
+        return {"id": job["id"], "text": job["text"], "running": job["result"] is None, "progress": self.progress,
+                "seconds": round(time.time() - job["started"]), "result": job["result"]}
+
+    def busy_text(self) -> str:
+        job = self.job
+        return f"Still working on “{job['text']}”. Wait for it to finish." if job and job["result"] is None \
+            else "Still busy with the previous change. Try again in a moment."
 
     def run(self, text: str) -> dict:
         self.progress = ""
@@ -102,10 +142,19 @@ class App:
 
     def _result(self, r, by_path: bool = False) -> dict:
         return {"kind": r.kind, "text": r.text, "seconds": r.seconds, "question": bool(r.tools or r.by_code),
-                "folder": self._show(r.folder) if r.folder else "",
+                "folder": self._show(r.folder) if r.folder else "", "picked": by_path,
+                "here": self._contents(r.folder) if r.kind == "proposal" else None,
                 "steps": [self._step(i, s, r.folder, self.base if by_path else None) for i, s in enumerate(r.steps)],
                 "blocked": [{"file": b.get("file", ""), "action": b.get("action", ""), "why": b["blocked"]}
                             for b in r.blocked]}
+
+    @staticmethod
+    def _contents(folder: Path) -> dict:
+        """What the folder holds now, so the page can draw it as it will be after the plan."""
+        if folder is None or not folder.is_dir():
+            return {"files": [], "folders": [], "exists": False}
+        return {"files": [p.name for p in scanner.files_in(folder)[:MAX_LISTED]],
+                "folders": scanner.subfolders_of(folder), "exists": True}
 
     def apply(self, selected: list) -> dict:
         if self.last is None:
@@ -133,29 +182,41 @@ class App:
         """base: show where each file comes from (search results come from many folders)."""
         src = Path(s["src"])
         name = str(src.relative_to(base)) if base and src.is_relative_to(base) else str(src) if base else src.name
+        # for the After window: the file's own name, whether it is in the folder now, and where it ends up in it
+        where = {"name": src.name, "from_here": src.parent == folder, "to_dir": None, "new_name": src.name}
         if s["op"] == "recycle":
-            return {"i": i, "action": "delete", "file": name, "target": "Recycle Bin", "reason": s["reason"]}
+            return {"i": i, "action": "delete", "file": name, "target": "Recycle Bin", "reason": s["reason"]} | where
         dst = Path(s["dst"])
+        if dst.parent.is_relative_to(folder):  # None: it leaves the folder
+            where["to_dir"] = "" if dst.parent == folder else dst.parent.relative_to(folder).as_posix()
+        where["new_name"] = dst.name
         renamed = dst.name != src.name
         action = "rename" if dst.parent == src.parent else ("move+rename" if renamed else "move")
         if base:
             target = dst.relative_to(base) if dst.is_relative_to(base) else dst
         else:
             target = dst.relative_to(folder) if dst.is_relative_to(folder) else dst  # full path when it leaves the folder
-        return {"i": i, "action": action, "file": name, "target": str(target), "reason": s["reason"]}
+        return {"i": i, "action": action, "file": name, "target": str(target), "reason": s["reason"]} | where
 
 
 def handler(app: App, port: int):
     hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
-    busy = threading.Lock()
-    routes = {"/api/info": lambda body: app.info(), "/api/run": lambda body: app.run(body.get("text", "").strip()),
+    routes = {"/api/info": lambda body: app.info(), "/api/run": lambda body: app.start(body.get("text", "").strip()),
               "/api/apply": lambda body: app.apply(body.get("selected", [])), "/api/undo": lambda body: app.undo(),
               "/api/act": lambda body: app.act(body.get("selected", []), body.get("action", ""), body.get("to", "")),
               "/api/open": lambda body: app.open(body.get("i")),
-              "/api/progress": lambda body: {"text": app.progress}}
+              "/api/progress": lambda body: app.status()}
+
+    def call(path, body):
+        try:
+            return routes[path](body)
+        except Exception as e:  # show the error in the page instead of a broken connection
+            return {"error": f"{type(e).__name__}: {e}"}
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
+            if self.headers.get("Host") in hosts and self.path.startswith("/fonts/") and self.path[7:] in FONTS:
+                return self._send(200, FONTS[self.path[7:]].read_bytes(), "font/woff2", cache=True)
             if self.headers.get("Host") not in hosts or self.path != "/":
                 return self._send(404, b"Not found", "text/plain")
             page = PAGE.read_text(encoding="utf-8").replace("__TOKEN__", TOKEN)
@@ -166,25 +227,28 @@ def handler(app: App, port: int):
             if self.headers.get("Host") not in hosts or self.headers.get("X-Token") != TOKEN \
                     or self.path not in routes:
                 return self._send(403, b"Forbidden", "text/plain")
-            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
-            if self.path in ("/api/info", "/api/progress"):  # answered while a request is running
-                out = routes[self.path](body)
-            elif not busy.acquire(blocking=False):  # one model request or file change at a time
-                out = {"error": "Still working on the previous request. Wait for it to finish."}
+            try:
+                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
+            except ValueError:
+                body = None
+            if not isinstance(body, dict):
+                out = {"error": "The page sent something the app can't read. Reload the page."}
+            elif self.path in ("/api/info", "/api/progress", "/api/run"):  # run starts in the background by itself
+                out = call(self.path, body)
+            elif not app.lock.acquire(blocking=False):  # one model request or file change at a time
+                out = {"error": app.busy_text(), "busy": True}
             else:
                 try:
-                    out = routes[self.path](body)
-                except Exception as e:  # show the error in the page instead of a broken connection
-                    out = {"error": f"{type(e).__name__}: {e}"}
+                    out = call(self.path, body)
                 finally:
-                    busy.release()
+                    app.lock.release()
             self._send(200, json.dumps(out, ensure_ascii=False).encode("utf-8"), "application/json")
 
-        def _send(self, code, data, kind):
+        def _send(self, code, data, kind, cache=False):
             self.send_response(code)
             self.send_header("Content-Type", kind)
             self.send_header("Content-Length", str(len(data)))
-            self.send_header("Cache-Control", "no-store")
+            self.send_header("Cache-Control", "max-age=86400" if cache else "no-store")
             self.end_headers()
             self.wfile.write(data)
 
