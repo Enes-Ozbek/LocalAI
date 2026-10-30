@@ -62,7 +62,7 @@ changes, deleted files included (they come back out of the Recycle Bin, as long 
 A request runs in the app, not in the page: the page shows a progress bar and the time, and if you reload it or
 open a second window, it shows the request that is still running instead of starting another. Questions and search results get their own screens. The page is served on this PC only, only the page the
 app opened can use it, and nothing is loaded from the internet (the Figtree font is in `assistant/fonts`, SIL Open
-Font License). Light and dark follow Windows. Press Ctrl+C in the terminal to quit.
+Font License). Light and dark follow Windows until you press the Light/Dark button at the top right, which is remembered. Press Ctrl+C in the terminal to quit.
 Options as for `cli.py` (`--base`, `--model`), plus `--port` and `--no-browser`.
 
 Or double-click `Folder Assistant.bat`: it asks whether to use the test sandbox (Enter) or your real folders

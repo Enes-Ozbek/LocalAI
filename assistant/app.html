@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Folder Assistant</title>
+<script>
+// light or dark before anything is drawn: the last choice made with the button, else what Windows uses
+(function () {
+  let saved = null;
+  try { saved = localStorage.getItem("theme"); } catch (e) {}
+  const dark = saved ? saved === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+})();
+</script>
 <style>
 /* Figtree is served by app.py from assistant/fonts (SIL Open Font License): nothing is loaded from the internet. */
 @font-face { font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap;
@@ -25,15 +34,14 @@
   --radius-sm: 5px; --radius-md: 8px; --radius-lg: 12px; --radius-pill: 999px;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121313; --surface: #1c1d1f; --text: #ececed; --text-muted: #a3a4aa;
-    --line: #2d2e31; --line-strong: #6f7076;
-    --accent: #8db5ff; --on-accent: #0f1726; --accent-tint: #1b2638; --delete: #ff8c6b;
-    --folder: #e2b24a; --folder-back: #b8892c; --folder-edge: #e2b24a; --file-paper: #2b2c30; --file-edge: #8a8b91;
-    --type-pdf: #ff8a80; --type-image: #6fd39a; --type-doc: #8db5ff; --type-app: #b9bcc6; --type-text: #d9bf7a; --on-type: #121313;
-    color-scheme: dark;
-  }
+/* dark: set by the script below from the Light/Dark button, or from Windows when it was never pressed */
+:root[data-theme="dark"] {
+  --bg: #121313; --surface: #1c1d1f; --text: #ececed; --text-muted: #a3a4aa;
+  --line: #2d2e31; --line-strong: #6f7076;
+  --accent: #8db5ff; --on-accent: #0f1726; --accent-tint: #1b2638; --delete: #ff8c6b;
+  --folder: #e2b24a; --folder-back: #b8892c; --folder-edge: #e2b24a; --file-paper: #2b2c30; --file-edge: #8a8b91;
+  --type-pdf: #ff8a80; --type-image: #6fd39a; --type-doc: #8db5ff; --type-app: #b9bcc6; --type-text: #d9bf7a; --on-type: #121313;
+  color-scheme: dark;
 }
 html, body { margin: 0; min-height: 100%; }
 [hidden] { display: none !important; }
@@ -61,6 +69,11 @@ html, body { margin: 0; min-height: 100%; }
 .fa-link { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-size: 14px; color: var(--text-muted);
   text-decoration: underline; text-underline-offset: 3px; cursor: pointer; white-space: nowrap; }
 .fa-link:disabled { cursor: default; text-decoration: none; }
+.fa-theme { appearance: none; font: inherit; font-size: 14px; font-weight: 600; height: 32px; padding: 0 12px 0 10px; display: inline-flex;
+  align-items: center; gap: 6px; border-radius: var(--radius-md); border: 1px solid var(--line-strong); background: var(--surface);
+  color: var(--text); cursor: pointer; white-space: nowrap; }
+.fa-theme:hover { background: var(--accent-tint); }
+.fa-theme svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* checkbox */
 .fa-check { appearance: none; -webkit-appearance: none; flex: none; width: 18px; height: 18px; margin: 0; position: relative; cursor: pointer;
@@ -203,6 +216,7 @@ html, body { margin: 0; min-height: 100%; }
   <span class="fa-small fa-muted" id="sandbox" hidden
         title="Folder names point at the test sandbox: “Downloads” means sandbox\Downloads, not your real folder.">Test sandbox</span>
   <button class="fa-link" id="undo" type="button">Undo last run</button>
+  <button class="fa-theme" id="theme" type="button"></button>
 </header>
 <main class="fv-wrap" id="main"></main>
 
@@ -735,6 +749,34 @@ async function undo() {
   show(head(r.error ? "Undo failed" : r.message === "Nothing to undo." ? "Nothing to undo" : "Undone",
             r.error || (r.message === "Nothing to undo." ? "No run of this app is left to undo." : r.message)), newRequest());
 }
+
+// the Light/Dark button: shows the mode it switches to, and is remembered for next time
+const themeBtn = document.getElementById("theme");
+const THEME_ICONS = {  // fixed markup: a moon for dark, a sun for light
+  dark: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  light: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>'
+};
+function drawThemeButton() {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  const svg = document.createElementNS(SVG, "svg");
+  for (const [k, v] of Object.entries({ viewBox: "0 0 24 24", width: 16, height: 16, "aria-hidden": "true" })) svg.setAttribute(k, v);
+  svg.innerHTML = THEME_ICONS[next];
+  fill(themeBtn, svg, next === "dark" ? "Dark" : "Light");
+  themeBtn.title = "Switch to " + next + " mode";
+  themeBtn.setAttribute("aria-label", themeBtn.title);
+}
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem("theme", next); } catch (e) {}
+  drawThemeButton();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {  // Windows switched, and no choice was made here
+  let saved = null;
+  try { saved = localStorage.getItem("theme"); } catch (err) {}
+  if (!saved) { document.documentElement.dataset.theme = e.matches ? "dark" : "light"; drawThemeButton(); }
+});
+drawThemeButton();
 
 document.getElementById("form").addEventListener("submit", e => { e.preventDefault(); send(); });
 undoBtn.addEventListener("click", undo);
