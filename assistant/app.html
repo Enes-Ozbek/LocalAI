@@ -5,173 +5,273 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Folder Assistant</title>
 <style>
+/* Figtree (SIL Open Font License, see fonts/OFL.txt), served by app.py: the page loads nothing from the internet */
+@font-face { font-family: "Figtree"; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url(/fonts/figtree-latin-ext.woff2) format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+    U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Figtree"; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url(/fonts/figtree-latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+/* Colours: the folder view's tokens (docs/ui.md). Text pairs hold 4.5:1, borders and icon edges 3:1, in both themes. */
 :root {
-  --ground: #F3F3F3; --layer: #F9F9F9; --card: #FFFFFF; --subtle: #FAFAFA;
-  --line: #E5E5E5; --line-soft: #F0F0F0; --line-strong: #D1D1D1;
-  --text: #1B1B1B; --text-2: #5F5F5F; --text-off: #A0A0A0;
-  --accent: #005FB8; --accent-border: #1A5FA8; --on-accent: #FFFFFF;
-  --info-bg: #F6F9FE; --info: #005FB8;
-  --caution-bg: #FFF4CE; --caution: #9D5D00;
-  --success-bg: #DFF6DD; --success: #0F7B0F;
-  --error-bg: #FDE7E9; --error: #C42B1C;
-  --folder: #C49A2F;
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --text: #1a1a1c; --text-muted: #5f6066; --line: #e5e5e2; --line-strong: #86878d;
+  --accent: #1d5bbf; --on-accent: #ffffff; --accent-tint: #eaf1fc; --delete: #b3361a; --caution: #8a5a00;
+  --folder: #f3c457; --folder-back: #dca43a; --folder-edge: #9a6a10; --file-paper: #ffffff; --file-edge: #86878d;
+  --type-pdf: #c0392b; --type-image: #1f7a52; --type-doc: #2f62c4; --type-app: #55595f; --type-text: #7c6418; --on-type: #ffffff;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 40px;
+  --radius-sm: 5px; --radius-md: 8px; --radius-lg: 12px; --radius-pill: 999px;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --ground: #202020; --layer: #272727; --card: #2D2D2D; --subtle: #2B2B2B;
-    --line: #3A3A3A; --line-soft: #333333; --line-strong: #3A3A3A;
-    --text: #FFFFFF; --text-2: #CFCFCF; --text-off: #8A8A8A;
-    --accent: #4CC2FF; --accent-border: #60CDFF; --on-accent: #000000;
-    --info-bg: #2B2B2B; --info: #4CC2FF;
-    --caution-bg: #433519; --caution: #E4B55E;
-    --success-bg: #393D1B; --success: #6CCB5F;
-    --error-bg: #442726; --error: #FF99A4;
-    --folder: #E4B55E;
+    color-scheme: dark;
+    --bg: #121313; --surface: #1c1d1f; --text: #ececed; --text-muted: #a3a4aa; --line: #2d2e31; --line-strong: #6f7076;
+    --accent: #8db5ff; --on-accent: #0f1726; --accent-tint: #1b2638; --delete: #ff8c6b; --caution: #e6b450;
+    --folder: #e2b24a; --folder-back: #b8892c; --folder-edge: #e2b24a; --file-paper: #2b2c30; --file-edge: #8a8b91;
+    --type-pdf: #ff8a80; --type-image: #6fd39a; --type-doc: #8db5ff; --type-app: #b9bcc6; --type-text: #d9bf7a; --on-type: #121313;
   }
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
-body {
-  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 14px;
-  color: var(--text); background: var(--ground); display: flex; flex-direction: column;
-}
-button, textarea { font: inherit; color: inherit; }
-button { cursor: pointer; }
-.mono { font-family: "Cascadia Mono", Consolas, monospace; font-size: 12.5px; }
-.muted { color: var(--text-2); }
-svg { flex: none; }
+body { font-family: "Figtree", system-ui, sans-serif; font-size: 15px; line-height: 22px; color: var(--text); background: var(--bg);
+  display: flex; flex-direction: column; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.muted { color: var(--text-muted); }
+.small { font-size: 13px; line-height: 18px; }
+.del { color: var(--delete); }
+.grow { flex: 1; min-width: 0; }
 
-header { height: 44px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; }
-.logo { width: 18px; height: 18px; border-radius: 4px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
-header .name { font-size: 13px; }
-.chip { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2); }
-.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
+/* top bar and status line */
+.top { flex: none; display: flex; align-items: center; gap: var(--space-4); min-height: 60px; padding: 10px var(--space-5);
+  background: var(--surface); border-bottom: 1px solid var(--line); }
+.top .name { font-weight: 700; white-space: nowrap; }
+.request { flex: 1; max-width: 560px; display: flex; gap: var(--space-2); margin: 0; }
+.input { flex: 1; min-width: 0; height: 40px; padding: 0 14px; color: var(--text); background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-md); }
+.input::placeholder { color: var(--text-muted); opacity: 1; }
+.input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.sandbox { font-size: 13px; line-height: 22px; padding: 0 10px; border: 1px solid var(--caution); border-radius: var(--radius-pill);
+  color: var(--caution); white-space: nowrap; }
+footer { flex: none; display: flex; align-items: center; gap: 18px; height: 32px; padding: 0 var(--space-5); background: var(--surface);
+  border-top: 1px solid var(--line); font-size: 12.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; }
+footer .path { overflow: hidden; text-overflow: ellipsis; }
+.dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--accent); }
 
-.layer { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--layer);
-  border-top: 1px solid var(--line); }
+/* buttons, checkboxes, labels */
+.btn { appearance: none; height: 40px; padding: 0 18px; display: inline-flex; align-items: center; gap: var(--space-2); font-weight: 600;
+  border-radius: var(--radius-md); border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); cursor: pointer; white-space: nowrap; }
+.btn:hover { background: var(--accent-tint); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn:disabled, .btn.primary:disabled { background: transparent; border: 1px dashed var(--line-strong); color: var(--text-muted); cursor: default; }
+.link { appearance: none; background: none; border: 0; padding: 0; font-size: 14px; color: var(--text-muted); text-decoration: underline;
+  text-underline-offset: 3px; cursor: pointer; white-space: nowrap; }
+.link:disabled { cursor: default; opacity: .6; }
+.check { appearance: none; -webkit-appearance: none; flex: none; width: 18px; height: 18px; margin: 0; position: relative; cursor: pointer;
+  border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); }
+.check:checked, .check:indeterminate { background: var(--accent); border-color: var(--accent); }
+.check:checked::after { content: ""; position: absolute; left: 4.5px; top: 1px; width: 5px; height: 10px;
+  border: solid var(--on-accent); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.check:indeterminate::after { content: ""; position: absolute; left: 3px; top: 6.75px; width: 9px; height: 2px; background: var(--on-accent); }
+.pill { display: inline-block; padding: 0 7px; border-radius: var(--radius-pill); font-size: 11.5px; line-height: 17px; font-weight: 600; }
+.pill.new { background: var(--accent-tint); color: var(--accent); }
+.pill.renamed { border: 1px solid var(--line-strong); color: var(--text-muted); line-height: 15px; }
+
+/* icons: folders, files with a label for their type, the Recycle Bin, and the notices' marks */
+.ic { display: block; flex: none; overflow: visible; }
+.ic .back { fill: var(--folder-back); stroke: var(--folder-edge); stroke-width: 1; }
+.ic .front { fill: var(--folder); stroke: var(--folder-edge); stroke-width: 1; }
+.ic .paper { fill: var(--file-paper); stroke: var(--file-edge); stroke-width: 1.2; }
+.ic .fold { fill: none; stroke: var(--file-edge); stroke-width: 1.2; stroke-linejoin: round; }
+.ic .band { fill: var(--type-app); }
+.ic .band.pdf { fill: var(--type-pdf); }
+.ic .band.image { fill: var(--type-image); }
+.ic .band.doc { fill: var(--type-doc); }
+.ic .band.text { fill: var(--type-text); }
+.ic .tag { fill: var(--on-type); font-family: "Figtree", system-ui, sans-serif; font-size: 7.5px; font-weight: 700; letter-spacing: .3px; }
+.ic .bin { fill: none; stroke: var(--delete); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.mark { flex: none; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; margin-top: 2px; }
+
+/* the page */
 main { flex: 1; min-height: 0; overflow-y: auto; }
-.page { max-width: 1000px; margin: 0 auto; padding: 26px 32px 24px; display: flex; flex-direction: column; gap: 16px; }
-h1 { margin: 0; font-size: 28px; font-weight: 600; }
-h2 { margin: 0; font-size: 20px; font-weight: 600; }
-.lead { margin: 6px 0 0; line-height: 1.5; color: var(--text-2); max-width: 640px; }
-.label { font-weight: 600; margin-bottom: 8px; }
+.page { max-width: 1100px; margin: 0 auto; padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+h1 { margin: 0; font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.head p { margin: 2px 0 0; }
+.lead { margin: 6px 0 0; color: var(--text-muted); max-width: 640px; }
 
-.card { background: var(--card); border: 1px solid var(--line); border-bottom-color: var(--line-strong); border-radius: 4px; }
-.bar { border: 1px solid var(--line); border-radius: 4px; padding: 11px 13px; display: flex; gap: 11px; align-items: flex-start; }
-.bar .title { font-weight: 600; }
-.bar .body { font-size: 13px; line-height: 1.5; color: var(--text-2); margin-top: 2px; white-space: pre-wrap; }
-.bar > svg { margin-top: 2px; }
-.bar.info { background: var(--info-bg); } .bar.info > svg { stroke: var(--info); }
-.bar.caution { background: var(--caution-bg); } .bar.caution > svg { stroke: var(--caution); }
-.bar.success { background: var(--success-bg); } .bar.success > svg { stroke: var(--success); }
-.bar.error { background: var(--error-bg); } .bar.error > svg { stroke: var(--error); }
-.bar .grow { flex: 1; min-width: 0; }
+.notice { display: flex; align-items: flex-start; gap: var(--space-3); padding: 12px var(--space-4); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.notice .title { font-weight: 600; }
+.notice .body { margin-top: 2px; font-size: 14px; line-height: 20px; color: var(--text-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.notice.info .mark, .notice.success .mark { stroke: var(--accent); }
+.notice.caution .mark { stroke: var(--caution); }
+.notice.error .mark { stroke: var(--delete); }
+.notice.success { background: var(--accent-tint); border-color: var(--accent-tint); }
+.notice.success .body { color: var(--text); }
 
-.examples { display: flex; flex-direction: column; gap: 3px; }
-.example { text-align: left; width: 100%; padding: 11px 14px; display: flex; align-items: center; gap: 14px; }
-.example:hover { background: var(--subtle); }
-.example .hint { display: block; font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.found { padding: 14px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); }
+.found .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.found .meta b { color: var(--text); font-weight: 600; }
+.found .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.found.clamp .text { max-height: 110px; overflow: hidden; }
+.found .link { margin-top: 6px; }
+.found.answer .text { font-size: 17px; line-height: 26px; }
 
-.btn { height: 34px; padding: 0 16px; border-radius: 4px; font-size: 14px; display: inline-flex; align-items: center; gap: 8px;
-  background: var(--card); border: 1px solid var(--line); border-bottom-color: var(--line-strong); }
-.btn:hover { background: var(--subtle); }
-.btn.primary { background: var(--accent); border-color: var(--accent-border); color: var(--on-accent); font-weight: 600; }
-.btn.primary:hover { filter: brightness(1.08); }
-.btn:disabled { opacity: .5; cursor: default; filter: none; }
-.link { border: 0; background: none; padding: 0; color: var(--accent); font-size: 12px; }
-
-.you { align-self: flex-end; max-width: 80%; background: var(--accent); color: var(--on-accent); border-radius: 8px 8px 2px 8px; padding: 8px 12px; white-space: pre-wrap; }
-.reply { padding: 12px 14px; display: flex; gap: 11px; }
-.reply .text { line-height: 1.55; white-space: pre-wrap; min-width: 0; }
-.meta { font-size: 12.5px; color: var(--text-2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: -8px; }
-
-.changes { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; min-width: 720px; }
-th { text-align: left; font-weight: 400; font-size: 12px; color: var(--text-2); padding: 9px 10px; border-bottom: 1px solid var(--line); }
-td { padding: 9px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; font-size: 13px; }
-tr:last-child td { border-bottom: 0; }
-td.why { color: var(--text-2); font-size: 12.5px; }
-.act { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-tr.off td { color: var(--text-off); background: var(--subtle); }
-tr.off .file { text-decoration: line-through; }
-tr:not(.off) .del { color: var(--error); }
-input[type=checkbox] { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); cursor: pointer; }
-.nowrap { white-space: nowrap; }
-.snippet { font-size: 12px; color: var(--text-2); margin-top: 3px; font-family: inherit; }
-.target { height: 34px; width: 210px; padding: 0 10px; font: inherit; font-size: 13px; color: inherit; background: var(--card);
-  border: 1px solid var(--line); border-bottom: 1px solid var(--text-2); border-radius: 4px; }
-.target:focus { outline: none; border-bottom: 2px solid var(--accent); }
-.commands { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.commands .grow { flex: 1; min-width: 200px; font-size: 13px; color: var(--text-2); }
-
-.working { display: flex; align-items: center; gap: 12px; color: var(--text-2); }
-.spinner { width: 18px; height: 18px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .9s linear infinite; }
+.working { display: flex; align-items: center; gap: 14px; padding: 18px 20px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-lg); color: var(--text-muted); }
+.spinner { flex: none; width: 20px; height: 20px; border: 2px solid var(--line); border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; border-color: var(--accent); } }
+.parts { display: flex; gap: 3px; max-width: 320px; height: 10px; margin-top: 8px; padding: 1.5px; border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill); }
+.parts span { flex: 1; border-radius: var(--radius-pill); }
+.parts span.done { background: var(--accent); }
+.parts span.now { background: var(--accent-tint); }
 
-.composer { flex: none; border-top: 1px solid var(--line); padding: 12px 32px 14px; }
-.composer .inner { max-width: 936px; margin: 0 auto; }  /* lines up with .page content (1000px - 2 x 32px) */
-.composer label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
-.composer .row { display: flex; gap: 8px; align-items: flex-end; }
-textarea { flex: 1; resize: none; font-size: 14px; line-height: 1.45; padding: 7px 11px; background: var(--card);
-  border: 1px solid var(--line); border-bottom: 1px solid var(--text-2); border-radius: 4px; }
-textarea:focus { outline: none; border-bottom: 2px solid var(--accent); }
-footer { height: 28px; flex: none; border-top: 1px solid var(--line); background: var(--ground); padding: 0 32px;
-  display: flex; align-items: center; gap: 18px; font-size: 12px; color: var(--text-2); }
-footer .grow { flex: 1; }
+/* a folder window: a path bar, its items, and a status bar that says why */
+.win { display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-lg); }
+.bar { flex: none; display: flex; align-items: center; gap: var(--space-2); height: 46px; padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--line); white-space: nowrap; }
+.bar .which { font-weight: 600; margin-right: var(--space-2); }
+.bar .count { margin-left: auto; padding-left: var(--space-2); font-size: 13px; color: var(--text-muted); }
+.crumbs { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; }
+.crumbs button { appearance: none; background: none; border: 0; padding: 2px 4px; margin: 0 -4px; color: var(--text); cursor: pointer;
+  border-radius: 4px; white-space: nowrap; }
+.crumbs button:hover { background: var(--accent-tint); }
+.crumbs .sep { color: var(--text-muted); }
+.crumbs .here { overflow: hidden; text-overflow: ellipsis; }
+.back { appearance: none; flex: none; width: 28px; height: 28px; margin-left: -6px; border: 0; border-radius: var(--radius-md); background: none;
+  color: var(--text); font-size: 18px; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.back:hover { background: var(--accent-tint); }
+.back:disabled { color: var(--line-strong); background: none; cursor: default; }
+.body { flex: 1; min-height: 0; max-height: min(62vh, 620px); overflow: auto; }
+.status { flex: none; margin-top: auto; min-height: 40px; padding: 9px var(--space-4); border-top: 1px solid var(--line);
+  font-size: 13px; line-height: 18px; color: var(--text-muted); overflow-wrap: anywhere; }
+.status b { color: var(--text); font-weight: 600; }
+
+.cols { display: grid; grid-template-columns: 340px 28px minmax(0, 1fr); align-items: stretch; }
+.cols.one { grid-template-columns: minmax(0, 1fr); }
+.arrow { display: grid; place-items: center; color: var(--text-muted); font-size: 18px; }
+
+/* Now: one row per file */
+.list { list-style: none; margin: 0; padding: 6px 0; }
+.row { display: flex; align-items: center; gap: var(--space-3); padding: 7px var(--space-4); }
+label.row { cursor: pointer; }
+label.row:hover { background: var(--accent-tint); }
+.row .nm { flex: 1; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .nm .from { display: block; font-size: 12px; line-height: 16px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
+.row .to { max-width: 48%; overflow: hidden; text-overflow: ellipsis; font-size: 13px; line-height: 18px; color: var(--text-muted); white-space: nowrap; }
+.row .to.kept { color: var(--caution); }
+.row.off .nm { color: var(--text-muted); text-decoration: line-through; }
+.row .spacer { flex: none; width: 18px; }
+.divider { padding: 10px var(--space-4) 4px; margin-top: 6px; border-top: 1px solid var(--line); font-size: 12px; line-height: 16px;
+  color: var(--text-muted); }
+
+/* After: big icons */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, 116px); gap: var(--space-2); padding: var(--space-4); align-content: start; }
+.tile { appearance: none; min-width: 0; padding: 10px 6px 8px; display: flex; flex-direction: column; align-items: center; gap: var(--space-1);
+  background: none; border: 1px solid transparent; border-radius: var(--radius-md); color: var(--text); text-align: center; cursor: default; }
+.tile:hover { background: var(--accent-tint); }
+.tile.sel { background: var(--accent-tint); border-color: var(--accent); }
+.tile .nm { font-size: 13px; line-height: 17px; font-weight: 500; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; }
+.tile .sub { font-size: 12px; line-height: 16px; color: var(--text-muted); overflow-wrap: anywhere; }
+.line { display: flex; align-items: center; gap: var(--space-3); margin: 0 var(--space-4) var(--space-4); padding: 10px var(--space-3);
+  border: 1px dashed var(--line-strong); border-radius: var(--radius-md); font-size: 13px; line-height: 18px; overflow-wrap: anywhere; }
+.empty { padding: var(--space-5) var(--space-4); color: var(--text-muted); font-size: 14px; }
+
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
+.actions.sticky { position: sticky; bottom: 0; z-index: 1; margin: 0 calc(-1 * var(--space-5)); padding: var(--space-3) var(--space-5);
+  background: var(--bg); border-top: 1px solid var(--line); }  /* Apply stays in reach below a long list */
+.actions .grow { min-width: 220px; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+.actions .grow b { color: var(--text); font-weight: 600; }
+.target { flex: 0 1 240px; height: 40px; }
+
+/* home: examples */
+.example { appearance: none; width: 100%; padding: 10px var(--space-4); display: flex; flex-direction: column; align-items: flex-start;
+  background: none; border: 0; border-top: 1px solid var(--line); text-align: left; cursor: pointer; }
+.example:first-child { border-top: 0; }
+.example:hover { background: var(--accent-tint); }
+.example .hint { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+
+/* search results: a details view */
+.details { width: 100%; min-width: 760px; border-collapse: collapse; }
+.details th { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; font-size: 12.5px; font-weight: 500;
+  color: var(--text-muted); white-space: nowrap; }
+.details td { padding: 9px 10px; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top; }
+.details tr:last-child td { border-bottom: 0; }
+.details th:first-child, .details td:first-child { width: 34px; padding-left: var(--space-4); }
+.details .file { display: flex; align-items: flex-start; gap: 10px; }
+.details .file label { cursor: pointer; overflow-wrap: anywhere; }
+.details .snippet { margin-top: 2px; font-size: 12.5px; line-height: 17px; color: var(--text-muted); }
+.details .why { font-size: 13px; color: var(--text-muted); }
+
+@media (max-width: 880px) {
+  .cols { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
+  .arrow { transform: rotate(90deg); }
+}
 @media (max-width: 640px) {
-  .page, .composer { padding-left: 16px; padding-right: 16px; }
-  footer { padding: 0 16px; } footer .hide-small { display: none; }
+  .top { flex-wrap: wrap; padding: 10px var(--space-4); gap: var(--space-2) var(--space-4); }
+  .request { order: 3; flex-basis: 100%; max-width: none; }
+  .page { padding: var(--space-4); }
+  .actions.sticky { margin: 0 calc(-1 * var(--space-4)); padding: var(--space-3) var(--space-4); }
+  footer { padding: 0 var(--space-4); }
+  .hide-small { display: none; }
 }
 </style>
 </head>
 <body>
-<header>
-  <div class="logo"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+<header class="top">
   <span class="name">Folder Assistant</span>
-  <span class="chip"><span class="dot"></span><span id="model">…</span></span>
+  <form class="request" id="form">
+    <input class="input" id="request" autocomplete="off" aria-label="Your request"
+           placeholder="e.g. sort my downloads folder into subfolders, don't delete anything">
+    <button class="btn" id="send" type="submit">Send</button>
+  </form>
+  <span class="grow"></span>
+  <span class="sandbox" id="sandbox" hidden>Test sandbox</span>
+  <button class="link" id="undo" type="button">Undo last run</button>
 </header>
 
-<div class="layer">
-  <main><div class="page" id="page"></div></main>
+<main id="main"><div class="page" id="page"></div></main>
 
-  <div class="composer"><div class="inner">
-    <label for="request">Your request</label>
-    <div class="row">
-      <textarea id="request" rows="2" placeholder="e.g. sort my downloads folder into subfolders, don't delete anything"></textarea>
-      <button class="btn primary" id="send" type="button">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>Send
-      </button>
-    </div>
-  </div></div>
-
-  <footer>
-    <span id="status">Ready</span>
-    <span class="mono hide-small" id="base"></span>
-    <span class="grow"></span>
-    <span class="hide-small">Deletes go to the Recycle Bin</span>
-    <button class="link" id="undo" type="button">Undo last run</button>
-  </footer>
-</div>
+<footer>
+  <span id="status" role="status">Ready</span>
+  <span class="path hide-small" id="base"></span>
+  <span class="grow"></span>
+  <span class="hide-small">Deletes go to the Recycle Bin</span>
+  <span><span class="dot"></span><span id="model">…</span></span>
+</footer>
 
 <script>
 const TOKEN = "__TOKEN__";
-const ICONS = {
-  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
-  move: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 13h6M12.5 10.5l2.5 2.5-2.5 2.5"/>',
-  rename: '<path d="M4 20h4L20 8l-4-4L4 16z"/>',
-  delete: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
-  info: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 11v5"/>',
-  caution: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
-  check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
-  error: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
-  chat: '<path d="M4 5h16v11a2 2 0 0 1-2 2H9l-5 3z"/>',
-  chevron: '<path d="M9 5l7 7-7 7"/>',
-  apply: '<path d="M4 12.5l5 5L20 6.5"/>',
-  undo: '<path d="M3 10h10a5 5 0 1 1 0 10H8"/><path d="M3 10l4-4M3 10l4 4"/>',
-  search: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+const SVG = "http://www.w3.org/2000/svg";
+const SHAPES = {
+  folder: '<path class="back" d="M4.5 11a3 3 0 0 1 3-3h10.2l4 4H40.5a3 3 0 0 1 3 3v22a3 3 0 0 1-3 3h-33a3 3 0 0 1-3-3z"/>' +
+          '<path class="front" d="M4.5 19a3 3 0 0 1 3-3h33a3 3 0 0 1 3 3v18a3 3 0 0 1-3 3h-33a3 3 0 0 1-3-3z"/>',
+  file: '<path class="paper" d="M11.5 4.5h17l10 10v27a2 2 0 0 1-2 2h-25a2 2 0 0 1-2-2v-35a2 2 0 0 1 2-2z"/>' +
+        '<path class="fold" d="M28.5 4.5v8a2 2 0 0 0 2 2h8"/>',
+  bin: '<path class="bin" d="M11 13h26M20 13V9.5h8V13M14.5 13l2 26a2 2 0 0 0 2 1.8h11a2 2 0 0 0 2-1.8l2-26M21 19v15M27 19v15"/>',
 };
-const ACTIONS = { move: ["Move", "move"], "move+rename": ["Move + rename", "move"], rename: ["Rename", "rename"],
-                  delete: ["Delete", "delete"] };
+const MARKS = {
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  caution: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+  error: '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>',
+  success: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
+};
+// The colour of a file's label, by extension (as scanner.FILE_TYPES groups them). Everything else is drawn grey:
+// installers, archives, unfinished downloads.
+const KINDS = {};
+for (const [kind, exts] of Object.entries({
+  pdf: "pdf", image: "jpg jpeg png gif bmp webp heic tif tiff svg mp4 mkv avi mov wmv mp3 wav flac m4a",
+  doc: "doc docx odt rtf xls xlsx ods ppt pptx odp", text: "txt md csv log json",
+})) for (const e of exts.split(" ")) KINDS[e] = kind;
 
 // Builds elements with textContent only: file names and model text never become HTML.
 function el(tag, props = {}, ...kids) {
@@ -184,21 +284,38 @@ function el(tag, props = {}, ...kids) {
   for (const k of kids.flat()) if (k != null && k !== false) e.append(k);
   return e;
 }
-function icon(name, size = 16, color = "currentColor") {
-  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  for (const [k, v] of Object.entries({ width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color,
-      "stroke-width": 1.9, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" })) s.setAttribute(k, v);
-  s.innerHTML = ICONS[name];  // fixed markup from ICONS above
+function svg(markup, size, cls) {  // markup is one of the fixed strings above
+  const s = document.createElementNS(SVG, "svg");
+  for (const [k, v] of Object.entries({ viewBox: cls === "mark" ? "0 0 24 24" : "0 0 48 48", width: size, height: size, class: cls,
+      "aria-hidden": "true" })) s.setAttribute(k, v);
+  s.innerHTML = markup;
   return s;
 }
-function bar(kind, title, body, ...extra) {
-  return el("div", { class: "bar " + kind, role: kind === "error" || kind === "caution" ? "alert" : "status" },
-    icon({ info: "info", caution: "caution", success: "check", error: "error" }[kind]),
-    el("div", { class: "grow" }, el("div", { class: "title" }, title), body ? el("div", { class: "body" }, body) : null),
-    ...extra);
+function folderIcon(size) { return svg(SHAPES.folder, size, "ic"); }
+function binIcon(size) { return svg(SHAPES.bin, size, "ic"); }
+function fileIcon(name, size) {
+  const ext = (/\.([^.\s]+)$/.exec(name) || [])[1] || "";
+  const kind = KINDS[ext.toLowerCase()] || "app";
+  const s = svg(SHAPES.file + '<rect class="band ' + kind + '" x="5" y="26" width="28" height="11" rx="2"/>', size, "ic");
+  if (size >= 32) {  // too small to read in the Now list: the colour says enough there
+    const t = document.createElementNS(SVG, "text");
+    for (const [k, v] of Object.entries({ class: "tag", x: 19, y: 34.3, "text-anchor": "middle" })) t.setAttribute(k, v);
+    t.textContent = ext ? ext.toUpperCase().slice(0, 4) : "FILE";
+    s.append(t);
+  }
+  return s;
 }
+function mark(kind) { return svg(MARKS[kind], 18, "mark"); }
+
 function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
-function size(kb) { return kb >= 1024 * 1024 ? (kb / 1048576).toFixed(1) + " GB" : kb >= 1024 ? (kb / 1024).toFixed(1) + " MB" : Math.round(kb) + " KB"; }
+function size(kb) {  // like File Explorer: a file under 1 KB shows as 1 KB
+  return kb >= 1024 * 1024 ? (kb / 1048576).toFixed(1) + " GB" : kb >= 1024 ? (kb / 1024).toFixed(1) + " MB" : (kb > 0 ? Math.max(1, Math.round(kb)) : 0) + " KB";
+}
+function byName(a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }); }
+function capital(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
+function list(names, most = 8) { return names.length > most ? names.slice(0, most).join(", ") + " and " + (names.length - most) + " more" : names.join(", "); }
+// The model writes a little Markdown; show it as plain text.
+function tidy(text) { return text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/^[ \t]*[*-][ \t]+/gm, "• ").replace(/`([^`\n]+)`/g, "$1").trim(); }
 
 async function api(path, body = {}) {
   const r = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json", "X-Token": TOKEN },
@@ -208,138 +325,434 @@ async function api(path, body = {}) {
 }
 
 const page = document.getElementById("page"), input = document.getElementById("request");
-const sendBtn = document.getElementById("send"), statusEl = document.getElementById("status");
+const sendBtn = document.getElementById("send"), undoBtn = document.getElementById("undo"), statusEl = document.getElementById("status");
 let info = null, busy = false;
 
-function show(...nodes) { page.replaceChildren(...nodes.filter(Boolean)); document.querySelector("main").scrollTop = 0; }
+function show(...nodes) { page.replaceChildren(...nodes.flat().filter(Boolean)); document.getElementById("main").scrollTop = 0; }
 function setBusy(on, text) {
-  busy = on; sendBtn.disabled = on; document.getElementById("undo").disabled = on;
+  busy = on; sendBtn.disabled = on; undoBtn.disabled = on;
   statusEl.textContent = text || "Ready";
 }
+function head(title, sub) { return el("div", { class: "head" }, el("h1", {}, title), sub ? el("p", { class: "small muted" }, sub) : null); }
+function notice(kind, title, body, ...extra) {
+  return el("div", { class: "notice " + kind, role: kind === "error" || kind === "caution" ? "alert" : "status" }, mark(kind),
+    el("div", { class: "grow" }, el("div", { class: "title" }, title), body ? el("div", { class: "body" }, body) : null), ...extra);
+}
+function button(text, onclick, cls = "btn") { return el("button", { class: cls, type: "button", onclick }, text); }
+function notAnswering(e) { return notice("error", "The app is not answering", "Is app.py still running? " + e.message); }
 
-function home() {
+// What the model said, with where and how long. Long explanations start folded so the folders stay in view.
+function found(text, meta, { title = "What I found", fold = false, answer = false } = {}) {
+  const body = el("div", { class: "text" }, tidy(text));
+  const card = el("section", { class: "found" + (fold ? " clamp" : "") + (answer ? " answer" : "") },
+    title || meta ? el("div", { class: "meta" }, title ? el("b", {}, title) : null, meta ? el("span", {}, (title ? "· " : "") + meta) : null) : null,
+    body);
+  if (fold) {
+    const more = button("Show all", () => { card.classList.remove("clamp"); more.remove(); }, "link");
+    more.hidden = true;
+    card.append(more);
+    requestAnimationFrame(() => { if (body.scrollHeight > body.clientHeight + 2) more.hidden = false; else card.classList.remove("clamp"); });
+  }
+  return card;
+}
+
+/* ---------------------------------------------------------------- start */
+
+function home(clear) {
+  if (clear) input.value = "";
   show(
-    el("div", {}, el("h1", {}, "New request"),
-      el("p", { class: "lead" }, "Name a folder and say what you want done. The files are read on this PC, you get an " +
-        "explanation and a preview of every change, and nothing is written until you choose Apply.")),
-    info && info.sandbox ? bar("info", "Folder names point at the test sandbox",
+    el("div", { class: "head" }, el("h1", {}, "What should I tidy?"),
+      el("p", { class: "lead" }, "Name a folder and say what you want done. You'll see the folder as it will look after the " +
+        "changes, next to how it is now, and nothing is written until you choose Apply.")),
+    info && info.sandbox ? notice("info", "Folder names point at the test sandbox",
       "“Downloads” means sandbox\\Downloads, not your real folder. Start without --base sandbox when you are ready.") : null,
-    el("div", {}, el("div", { class: "label" }, "Start from an example"),
-      el("div", { class: "examples" }, (info ? info.examples : []).map(x =>
-        el("button", { class: "card example", type: "button", onclick: () => send(x.text) },
-          icon("chat", 18, "var(--accent)"),
-          el("span", { style: "flex:1;min-width:0" }, el("span", {}, x.text), el("span", { class: "hint" }, x.hint)),
-          icon("chevron", 14, "var(--text-2)"))))));
+    info ? el("section", { class: "win" },
+      el("div", { class: "bar" }, el("span", { class: "which" }, "Start from an example")),
+      el("div", {}, info.examples.map(x => el("button", { class: "example", type: "button", onclick: () => send(x.text) },
+        el("span", {}, x.text), el("span", { class: "hint" }, x.hint))))) : null,
+    info ? el("p", { class: "small muted", style: "margin:0" }, "Folder names are looked up under " + info.base + ".") : null);
 }
 
 async function send(text) {
   text = (text ?? input.value).trim();
   if (!text || busy) return;
-  input.value = "";
-  const you = el("div", { class: "you" }, text);
-  const working = el("span", {}, "Reading the folder and asking the model… this can take up to a minute.");
-  show(you, el("div", { class: "working" }, el("div", { class: "spinner" }), working));
+  input.value = text;  // the box keeps the request this page answers; clicking it selects it, so a new one replaces it
+  input.blur();
+  const working = el("div", {}, "Reading the folder and asking the model… this can take up to a minute.");
+  const parts = el("div", { class: "parts", "aria-hidden": "true" });
+  parts.hidden = true;
+  show(head("Working on it", "“" + text + "”"),
+    el("div", { class: "working", role: "status" }, el("div", { class: "spinner" }), el("div", { class: "grow" }, working, parts)));
   setBusy(true, "Working…");
   // big folders go to the model in parts: show which one it is on
-  const timer = setInterval(() => api("/api/progress").then(p => { if (p.text) working.textContent = p.text; }).catch(() => {}), 1000);
+  const timer = setInterval(() => api("/api/progress").then(p => {
+    if (!p.text) return;
+    working.textContent = p.text;
+    const m = /part (\d+) of (\d+)/i.exec(p.text);
+    if (m) {
+      parts.replaceChildren(...Array.from({ length: +m[2] }, (_, k) => el("span", { class: k + 1 < +m[1] ? "done" : k + 1 === +m[1] ? "now" : "" })));
+      parts.hidden = false;
+    }
+  }).catch(() => {}), 1000);
   try {
     const r = await api("/api/run", { text });
-    if (r.error) show(you, bar("error", "Something went wrong", r.error));
-    else result(you, r);
+    if (r.error) show(notice("error", "Something went wrong", r.error));
+    else result(r, text);
   } catch (e) {
-    show(you, bar("error", "The app is not answering", "Is app.py still running? " + e.message));
+    show(notAnswering(e));
   } finally {
     clearInterval(timer);
   }
   setBusy(false);
 }
 
-function result(you, r) {
-  const total = r.seconds.reduce((a, b) => a + b, 0).toFixed(1);
-  const meta = el("div", { class: "meta" },
-    r.folder ? [icon("folder", 13, "var(--folder)"), el("span", { class: "mono" }, r.folder), el("span", {}, "·")] : null,
-    el("span", {}, "answered in " + total + "s"));
-  const reply = r.text ? el("div", { class: "card reply" },
-    el("div", { class: "logo", style: "width:22px;height:22px" }, icon("chat", 13, "var(--on-accent)")),
-    el("div", { class: "text" }, r.text)) : null;
-
-  if (r.kind === "ask") return show(you, bar("info", "Which folder do you mean?", r.text), meta);
-  if (r.kind === "refuse") return show(you, bar("caution", "I won't do that", r.text), meta);
-  if (r.kind === "error") return show(you, bar("error", "No usable answer this time", r.text + "\nNothing was touched. Ask again."), meta);
-  if (r.kind === "explain" && r.question) return show(you, reply, meta);  // an answer, not a plan
-  if (r.kind === "explain") return show(you, reply, meta, bar("info", "Nothing proposed", "Nothing on disk has changed."));
-  if (r.kind === "search") return searchResults(you, reply, meta, r);
-
-  const blocked = r.blocked.length ? bar("caution",
-    plural(r.blocked.length, "change") + " blocked by the safety rules",
-    r.blocked.map(b => b.action + " " + b.file + " — " + b.why).join("\n")) : null;
-  if (!r.steps.length) return show(you, reply, meta, blocked, bar("info", "No changes to make", "Nothing on disk has changed."));
-
-  const on = new Set(r.steps.map(s => s.i));
-  const applyBtn = el("button", { class: "btn primary", type: "button" }, icon("apply", 15), el("span"));
-  const count = el("span", { class: "muted", style: "font-size:12.5px" });
-  const all = el("input", { type: "checkbox", checked: "", "aria-label": "Select all" });
-  const boxes = [];
-  const update = () => {
-    applyBtn.lastChild.textContent = on.size ? "Apply " + plural(on.size, "change") : "Nothing selected";
-    applyBtn.disabled = !on.size;
-    count.textContent = on.size + " selected of " + r.steps.length + " proposed";
-    all.checked = on.size === r.steps.length;
-    all.indeterminate = on.size > 0 && on.size < r.steps.length;
-  };
-  all.addEventListener("change", () => {
-    for (const [box, tr, i] of boxes) { box.checked = all.checked; all.checked ? on.add(i) : on.delete(i); tr.classList.toggle("off", !all.checked); }
-    update();
-  });
-  const kinds = {};
-  for (const s of r.steps) { const k = s.action === "delete" ? "delete" : s.action === "rename" ? "rename" : "move"; kinds[k] = (kinds[k] || 0) + 1; }
-  const deletes = kinds.delete || 0;
-  const summary = r.steps.length > 8 ? el("div", { class: "muted", style: "font-size:13px;margin-top:-8px" },
-    [kinds.move ? plural(kinds.move, "move") : "", kinds.rename ? plural(kinds.rename, "rename") : "",
-     deletes ? plural(deletes, "delete") : ""].filter(Boolean).join(", ") + ".") : null;
-  const warn = deletes >= 10 ? bar("caution", plural(deletes, "file") + " will go to the Recycle Bin",
-    "Check the list before you apply. Untick anything you want to keep.") : null;
-  const rows = r.steps.map(s => {
-    const [label, ic] = ACTIONS[s.action];
-    const id = "chg-" + s.i;
-    const box = el("input", { type: "checkbox", id, checked: "", onchange: e => {
-        e.target.checked ? on.add(s.i) : on.delete(s.i); tr.classList.toggle("off", !e.target.checked); update(); } });
-    const tr = el("tr", {},
-      el("td", { style: "width:34px" }, box),
-      el("td", {}, el("label", { for: id, class: "act" + (s.action === "delete" ? " del" : "") },
-        icon(ic, 15, s.action === "delete" ? "var(--error)" : "var(--accent)"), label)),
-      el("td", { class: "mono file" }, s.file),
-      el("td", { class: "mono" + (s.action === "delete" ? " del" : " muted") }, s.target),
-      el("td", { class: "why" }, s.reason));
-    boxes.push([box, tr, s.i]);
-    return tr;
-  });
-  applyBtn.addEventListener("click", () => applyPlan(you, [...on]));
-  update();
-  show(you, reply, meta, blocked, warn,
-    el("div", { style: "display:flex;align-items:flex-end;gap:12px" }, el("h2", { style: "flex:1" }, "Review before anything is written"), count),
-    summary,
-    el("div", { class: "card changes" }, el("table", {},
-      el("thead", {}, el("tr", {}, el("th", {}, all), el("th", {}, "Action"), el("th", {}, "File"), el("th", {}, "Goes to"), el("th", {}, "Why"))),
-      el("tbody", {}, rows))),
-    el("div", { class: "commands" },
-      el("span", { class: "grow" }, "Nothing has been written yet. Deletes go to the Recycle Bin, and the run is logged so it can be undone."),
-      applyBtn, el("button", { class: "btn", type: "button", onclick: home }, "Cancel")));
+function result(r, asked) {
+  const total = r.seconds.reduce((a, b) => a + b, 0);
+  const meta = [r.folder, total >= 0.05 ? "answered in " + total.toFixed(1) + " s" : ""].filter(Boolean).join(" · ");
+  const metaLine = meta ? el("p", { class: "small muted", style: "margin:0" }, meta) : null;
+  if (r.kind === "ask") {
+    show(notice("info", "Which folder do you mean?", r.text, el("span", { class: "small muted" }, "Type it above")), metaLine);
+    input.focus();
+    return;
+  }
+  if (r.kind === "refuse") return show(notice("caution", "I won't do that", r.text), metaLine);
+  if (r.kind === "error") return show(notice("error", "No usable answer this time", r.text + "\nNothing was touched. Ask again."), metaLine);
+  if (r.kind === "explain" && r.question) {  // an answer, not a plan
+    return show(head(capital(asked || "Your question")), found(r.text, meta, { title: "", answer: true }));
+  }
+  if (r.kind === "explain") {
+    const v = r.view;
+    const win = v && v.exists ? folderWindow(plan(r), { label: "Now", hint: "Click anything to see its size and date." }) : null;
+    show(head(win ? "What's in " + v.name : "Here's what I found"), found(r.text, meta), win && win.el,
+      notice("info", "Nothing proposed", "Nothing on disk has changed."));
+    return win && win.draw();
+  }
+  if (r.kind === "search") return searchResults(r, meta);
+  folderView(r, meta);
 }
 
-function searchResults(you, reply, meta, r) {
-  if (!r.matches.length) return show(you, reply, meta);
+/* ---------------------------------------------------------------- the folder: now and after */
+
+// The page's picture of a plan: the folder as it is now (view), the changes (steps) and which are ticked (on).
+function plan(r) {
+  const v = r.view || { name: r.folder, path: r.folder, exists: true, picked: true, entries: [], more: 0 };
+  return { v, steps: r.steps, on: new Set(r.steps.map(s => s.i)),
+           here: new Map(r.steps.filter(s => s.here).map(s => [s.name, s])),
+           kept: new Map(r.blocked.map(b => [b.file.toLowerCase(), b.why])) };
+}
+
+// The folder after the ticked changes: existing items that stay, new and existing folders with what moves in,
+// what goes to the Recycle Bin and what leaves for another folder.
+function after(p) {
+  const node = (name, fresh, entry) => ({ name, fresh, entry, dirs: new Map(), files: [] });
+  const root = node(p.v.name, !p.v.exists, null);
+  for (const e of p.v.entries) {
+    if (e.dir) { root.dirs.set(e.name, node(e.name, false, e)); continue; }
+    const s = p.here.get(e.name);
+    if (s && p.on.has(s.i)) continue;  // it moves, gets a new name or goes to the Recycle Bin
+    root.files.push({ name: e.name, entry: e, step: s, kept: p.kept.get(e.name.toLowerCase()) });
+  }
+  const bin = [], out = [];
+  for (const s of p.steps) {
+    if (!p.on.has(s.i)) continue;
+    if (s.bin) { bin.push(s); continue; }
+    if (s.to === null) { out.push(s); continue; }
+    let at = root;
+    s.to.forEach((name, k) => {
+      if (!at.dirs.has(name)) at.dirs.set(name, node(name, s.to_new[k], null));
+      at = at.dirs.get(name);
+    });
+    at.files.push({ name: s.new_name, step: s, moved: true });
+  }
+  return { root, bin, out };
+}
+function arriving(d) { let n = d.files.filter(f => f.moved).length; for (const x of d.dirs.values()) n += arriving(x); return n; }
+
+// A folder window with big icons. Double-click a folder to look inside; click anything to see why it is there.
+function folderWindow(p, { label = "After", done = false, hint } = {}) {
+  const state = { path: [], select: null };
+  const bar = el("div", { class: "bar" }), body = el("div", { class: "body" }), status = el("div", { class: "status", "aria-live": "polite" });
+  const win = el("section", { class: "win after" }, bar, body, status);
+
+  function tile(key, icon, name, label, info, open) {
+    const t = el("button", { class: "tile" + (state.select === key ? " sel" : ""), type: "button" }, icon, el("span", { class: "nm" }, name), label);
+    t.addEventListener("click", () => { state.select = key; draw(); });
+    if (open) {
+      t.addEventListener("dblclick", open);
+      t.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); open(); } });
+    }
+    if (state.select === key) status.replaceChildren(...info);
+    return t;
+  }
+  function sub(text) { return el("span", { class: "sub" }, text); }
+  function pill(kind, text) { return el("span", { class: "pill " + kind }, text); }
+
+  function draw() {
+    const t = after(p);
+    let at = t.root;
+    const trail = [t.root];
+    for (const name of state.path) {
+      if (!at.dirs.has(name)) { state.path = state.path.slice(0, trail.length - 1); break; }  // everything moving in was unticked
+      at = at.dirs.get(name);
+      trail.push(at);
+    }
+    const dirs = [...at.dirs.values()].sort((a, b) => (b.fresh - a.fresh) || byName(a, b));
+    const files = [...at.files].sort(byName);
+
+    // path bar
+    const back = el("button", { class: "back", type: "button", "aria-label": "Back" }, "‹");
+    back.disabled = !state.path.length;
+    back.addEventListener("click", () => { state.path.pop(); state.select = null; draw(); });
+    const crumbs = el("div", { class: "crumbs" });
+    trail.forEach((n, k) => {
+      if (k) crumbs.append(el("span", { class: "sep" }, "›"));
+      if (k === trail.length - 1) crumbs.append(el("span", { class: "here" }, n.name));
+      else crumbs.append(el("button", { type: "button", onclick: () => { state.path = state.path.slice(0, k); state.select = null; draw(); } }, n.name));
+    });
+    bar.replaceChildren(...[back, label ? el("span", { class: "which" }, label) : null, crumbs,
+      at.fresh ? pill("new", "New") : null, el("span", { class: "count" }, plural(dirs.length + files.length, "item"))].filter(Boolean));
+
+    // the items
+    status.replaceChildren();
+    const grid = el("div", { class: "grid" });
+    for (const d of dirs) {
+      const moving = arriving(d), items = d.entry && d.entry.items;
+      const names = [...[...d.dirs.keys()], ...d.files.map(f => f.name)];
+      const info = [el("b", {}, d.name), d.fresh ? " · new folder" + (names.length ? " · " + list(names) : "")
+        : " · folder" + (items != null ? " · " + plural(items, "item") + (done ? "" : " now") : "") +
+          (moving ? " · " + plural(moving, "file") + (done ? " moved in" : " moving in") : "")];
+      const tag = d.fresh ? pill("new", "New") : moving ? sub("+" + plural(moving, "file")) : items != null ? sub(plural(items, "item")) : null;
+      grid.append(tile("d:" + d.name, folderIcon(56), d.name, tag, info,
+        () => { state.path = [...state.path, d.name]; state.select = null; draw(); }));
+    }
+    for (const f of files) {
+      const s = f.step;
+      let tag = null, info;
+      if (f.moved) {
+        const renamed = s.new_name !== s.name, came = !(s.here && !s.to.length);
+        tag = renamed ? pill("renamed", "Renamed") : p.v.picked ? sub("from " + s.from) : null;
+        info = [el("b", {}, f.name), (renamed ? " · was " + s.name : "") + (came ? " · from " + s.from : "") + (s.reason ? " · " + s.reason : "")];
+      } else if (f.kept || s) {
+        tag = done ? null : sub("stays");
+        info = [el("b", {}, f.name), f.kept ? " · stays: the safety rules keep it (" + f.kept + ")" : " · stays: you unticked it"];
+      } else {
+        info = [el("b", {}, f.name), f.entry ? " · " + size(f.entry.size_kb) + " · changed " + f.entry.modified : ""];
+      }
+      grid.append(tile("f:" + f.name, fileIcon(f.name, 56), f.name, tag, info));
+    }
+    body.replaceChildren(grid.children.length ? grid : el("div", { class: "empty" }, "Nothing here."));
+
+    // what leaves this folder, under its items
+    if (at === t.root) {
+      if (t.bin.length) {
+        const names = t.bin.map(s => s.name + (t.bin.length <= 3 && s.reason ? " (" + s.reason.charAt(0).toLowerCase() + s.reason.slice(1) + ")" : ""));
+        body.append(el("div", { class: "line" }, binIcon(22),
+          el("span", {}, el("span", { class: "del" }, done ? "In the Recycle Bin: " : "Going to the Recycle Bin: "), list(names, 12))));
+      }
+      if (t.out.length) {
+        body.append(el("div", { class: "line" }, folderIcon(22),
+          el("span", {}, el("b", {}, done ? "Moved to other folders: " : "Moving to other folders: "),
+            list(t.out.map(s => s.new_name + " → " + s.out), 12))));
+      }
+      if (p.v.more) body.append(el("div", { class: "line" }, plural(p.v.more, "more item") + " in this folder are not shown."));
+    } else if (at.entry && at.entry.items) {
+      body.append(el("div", { class: "line" }, plural(at.entry.items, "item") + " already in " + at.name + " are not shown."));
+    }
+    if (!status.childNodes.length) {
+      status.textContent = at !== t.root ? "Click a file to see why it is here."
+        : hint || (dirs.length ? "Double-click a folder to look inside. Click anything to see why." : "Click anything to see why.");
+    }
+  }
+  return { el: win, draw };
+}
+
+// Now: one row per file, the files that change first, with where each one goes. Untick a row to keep that file.
+function nowWindow(p, changed) {
+  const picked = p.v.picked;
+  const all = el("input", { type: "checkbox", class: "check", "aria-label": "Select all" });
+  const items = picked ? p.steps.length : p.v.entries.length + p.v.more;
+  const bar = el("div", { class: "bar" }, all, el("span", { class: "which" }, picked ? "Picked" : "Now"),
+    picked ? null : el("div", { class: "crumbs" }, el("span", { class: "here muted" }, p.v.name)),
+    el("span", { class: "count" }, plural(items, "item")));
+  const ul = el("ul", { class: "list" }), rows = [];
+  for (const s of p.steps) {
+    const box = el("input", { type: "checkbox", class: "check", "aria-label": (s.bin ? "Delete " : s.to && !s.to.length && s.here ? "Rename " : "Move ") + s.name });
+    box.addEventListener("change", () => { box.checked ? p.on.add(s.i) : p.on.delete(s.i); changed(); });
+    const to = el("span", { class: "to" });
+    const row = el("label", { class: "row", title: s.reason || "" }, box, fileIcon(s.name, 22),
+      el("span", { class: "nm" }, s.name, picked ? el("span", { class: "from" }, s.from) : null), to);
+    rows.push({ s, row, box, to });
+    ul.append(el("li", {}, row));
+  }
+  if (!picked) {
+    const rest = p.v.entries.filter(e => e.dir || !p.here.has(e.name));
+    if (rest.length) ul.append(el("li", { class: "divider" }, "Not changed · " + rest.length));
+    for (const e of rest) {
+      const kept = !e.dir && p.kept.get(e.name.toLowerCase());
+      ul.append(el("li", {}, el("div", { class: "row", title: kept ? "The safety rules keep it: " + kept : "" }, el("span", { class: "spacer" }),
+        e.dir ? folderIcon(22) : fileIcon(e.name, 22), el("span", { class: "nm" }, e.name), kept ? el("span", { class: "to kept" }, "kept") : null)));
+    }
+    if (p.v.more) ul.append(el("li", { class: "divider" }, plural(p.v.more, "more item") + " not shown"));
+  }
+  all.addEventListener("change", () => {
+    for (const x of rows) all.checked ? p.on.add(x.s.i) : p.on.delete(x.s.i);
+    changed();
+  });
+  function draw() {
+    for (const { s, row, box, to } of rows) {
+      const on = p.on.has(s.i);
+      box.checked = on;
+      row.classList.toggle("off", !on);
+      if (!on) to.replaceChildren("stays");
+      else if (s.bin) to.replaceChildren("→ ", el("span", { class: "del" }, "Recycle Bin"));
+      else if (s.to === null) to.replaceChildren("→ " + s.out);
+      else if (!s.to.length) to.replaceChildren("→ " + (s.here ? s.new_name : p.v.name));
+      else to.replaceChildren("→ " + s.to.join(" › ") + (s.new_name !== s.name ? ", renamed" : ""));
+    }
+    all.checked = p.on.size === rows.length;
+    all.indeterminate = p.on.size > 0 && p.on.size < rows.length;
+  }
+  const win = el("section", { class: "win now" }, bar, el("div", { class: "body" }, ul),
+    el("div", { class: "status" }, "Untick a file to leave it where it is."));
+  return { el: win, draw };
+}
+
+// Search results to delete: the Recycle Bin, with what goes in.
+function binWindow(p, done) {
+  const count = el("span", { class: "count" }), grid = el("div", { class: "grid" });
+  const win = el("section", { class: "win after" }, el("div", { class: "bar" }, binIcon(22), el("span", { class: "which" }, "Recycle Bin"), count),
+    el("div", { class: "body" }, grid), el("div", { class: "status" }, "You can restore them from the Recycle Bin."));
+  function draw() {
+    const going = p.steps.filter(s => p.on.has(s.i)).sort(byName);
+    count.textContent = (done ? "" : "+") + plural(going.length, "item");
+    grid.replaceChildren(...going.map(s => el("div", { class: "tile", title: s.reason || "" }, fileIcon(s.name, 56),
+      el("span", { class: "nm" }, s.name), el("span", { class: "sub" }, "from " + s.from))));
+    if (!going.length) grid.replaceChildren(el("div", { class: "empty" }, "Nothing selected."));
+  }
+  return { el: win, draw };
+}
+
+function describe(steps, p) {
+  const into = steps.filter(s => !s.bin && s.to && s.to.length);
+  const folders = new Set(into.map(s => s.to[0])), fresh = new Set(into.filter(s => s.to_new[0]).map(s => s.to[0]));
+  const arrive = steps.filter(s => !s.bin && s.to && !s.to.length && !s.here).length;
+  const renamed = steps.filter(s => !s.bin && s.new_name !== s.name).length;
+  const out = steps.filter(s => !s.bin && s.to === null).length, bin = steps.filter(s => s.bin).length;
+  const parts = [];
+  if (into.length) parts.push(plural(into.length, "file") + " into " + (fresh.size === folders.size ? plural(folders.size, "new folder")
+    : plural(folders.size, "folder") + (fresh.size ? " (" + fresh.size + " new)" : "")));
+  if (arrive) parts.push(plural(arrive, "file") + " into " + p.v.name);
+  if (renamed) parts.push(renamed + " renamed");
+  if (out) parts.push(plural(out, "file") + " to other folders");
+  if (bin) parts.push(bin + " to the Recycle Bin");
+  return parts.join(" · ");
+}
+
+function folderView(r, meta) {
+  const p = plan(r), v = p.v;
+  const deletesOnly = v.picked && r.steps.length && r.steps.every(s => s.bin);
+  const blocked = r.blocked.length ? notice("caution", plural(r.blocked.length, "change") + " blocked by the safety rules",
+    r.blocked.map(b => b.action + " " + b.file + ": " + b.why).join("\n")) : null;
+  const explained = r.text && !v.picked ? found(r.text, meta, { fold: true }) : null;
+  if (!r.steps.length) {
+    const win = r.view && r.view.exists ? folderWindow(p, { label: "Now", hint: "Click anything to see its size and date." }) : null;
+    show(head("No changes to make", "Nothing on disk has changed."), win && win.el, explained, blocked);
+    return win && win.draw();
+  }
+  const deletes = r.steps.filter(s => s.bin).length;
+  const warn = deletes >= 10 ? notice("caution", plural(deletes, "file") + " will go to the Recycle Bin",
+    "Check the list before you apply. Untick anything you want to keep.") : null;
+
+  const title = el("h1"), sub = el("p", { class: "small muted" });
+  const now = nowWindow(p, update);
+  const later = deletesOnly ? binWindow(p) : folderWindow(p);
+  const summary = el("span", { class: "grow" });
+  const apply = button("", () => applyPlan(p, r, apply), "btn primary");
+  function update() {
+    now.draw();
+    later.draw();
+    const on = r.steps.filter(s => p.on.has(s.i));
+    apply.textContent = on.length ? "Apply " + plural(on.length, "change") : "Nothing selected";
+    apply.disabled = !on.length;
+    summary.replaceChildren(el("b", {}, describe(on, p) || "Nothing selected"), ". Nothing is written until you apply, and you can undo.");
+    const t = after(p), counts = [plural(t.root.dirs.size, "folder"), plural(t.root.files.length, "file")].filter(x => !x.startsWith("0 "));
+    if (deletesOnly) {
+      title.textContent = "These go to the Recycle Bin";
+      sub.textContent = "You can restore them from there. Nothing has changed yet.";
+    } else if (v.picked) {
+      title.textContent = "Here’s " + v.name + " after the move";
+      sub.textContent = (v.exists ? "" : v.name + " is a new folder. ") + "Nothing has changed yet.";
+    } else {
+      title.textContent = "Here’s " + v.name + " after tidying";
+      sub.textContent = (v.more ? "" : plural(v.entries.length, "item") + " become " + (counts.join(" and ") || "nothing") + ". ") + "Nothing has changed yet.";
+    }
+  }
+  // the folders come first: what the request does to them is the point of the page; what the model said follows
+  show(el("div", { class: "head" }, title, sub), warn,
+    el("div", { class: "cols" }, now.el, el("div", { class: "arrow", "aria-hidden": "true" }, "→"), later.el),
+    el("div", { class: "actions sticky" }, summary, button("Cancel", () => home()), apply), blocked, explained);
+  update();
+}
+
+async function applyPlan(p, r, applyBtn) {
+  if (busy) return;
+  const selected = r.steps.filter(s => p.on.has(s.i)).map(s => s.i);  // row numbers only: the server keeps the plan
+  setBusy(true, "Applying…");
+  applyBtn.disabled = true;
+  try {
+    const x = await api("/api/apply", { selected });
+    if (x.error) {
+      show(notice("error", "Not applied", x.error + "\nIf some files were already changed, Undo last run puts them back."),
+        el("div", {}, button("New request", () => home(true))));
+    } else {
+      done(p, r, x);
+    }
+  } catch (e) {
+    show(notAnswering(e));
+  }
+  setBusy(false);
+}
+
+function done(p, r, x) {
+  const deletesOnly = p.v.picked && r.steps.every(s => s.bin);
+  const parts = [x.moved ? plural(x.moved, "file") + " moved" : "", x.recycled ? plural(x.recycled, "file") + " sent to the Recycle Bin" : ""];
+  const banner = notice("success", plural(x.moved + x.recycled, "change") + " applied to " + x.folder,
+    parts.filter(Boolean).join(", ") + ".\nUndo log: " + x.log, button("Undo this run", undo), button("New request", () => home(true)));
+  const win = deletesOnly ? binWindow(p, true) : folderWindow(p, { label: "", done: true });
+  show(head(deletesOnly ? "Done. The files are in the Recycle Bin." : "Done. This is " + p.v.name + " now.",
+    "Deleted files are in the Recycle Bin, and Undo puts everything back."), banner, win.el);
+  win.draw();
+}
+
+async function undo() {
+  if (busy) return;
+  setBusy(true, "Undoing…");
+  try {
+    const r = await api("/api/undo");
+    show(notice(r.error ? "error" : "info", r.error ? "Undo failed" : "Undo", r.error || r.message), el("div", {}, button("New request", () => home(true))));
+  } catch (e) {
+    show(notAnswering(e));
+  }
+  setBusy(false);
+}
+
+/* ---------------------------------------------------------------- search results */
+
+function searchResults(r, meta) {
+  const intro = head("Files found", meta);
+  const reply = r.text ? found(r.text, "", { title: "" }) : null;
+  if (!r.matches.length) return show(intro, reply);
   const on = new Set(), boxes = [];
   const note = el("div");
-  const count = el("span", { class: "muted", style: "font-size:12.5px" });
-  const all = el("input", { type: "checkbox", "aria-label": "Select all" });
-  const delBtn = el("button", { class: "btn", type: "button" }, icon("delete", 15, "var(--error)"), el("span"));
-  const moveBtn = el("button", { class: "btn", type: "button" }, icon("move", 15, "var(--accent)"), "Move to");
-  const target = el("input", { type: "text", class: "target", placeholder: "a folder, e.g. Documents/CVs", "aria-label": "Folder to move to" });
+  const count = el("span", { class: "count" });
+  const all = el("input", { type: "checkbox", class: "check", "aria-label": "Select all" });
+  const delBtn = button("Delete", () => act("delete"));
+  const moveBtn = button("Move to", () => act("move"));
+  const target = el("input", { type: "text", class: "input target", placeholder: "a folder, e.g. Documents/CVs", "aria-label": "Folder to move to" });
   const update = () => {
     count.textContent = on.size + " of " + r.matches.length + " selected";
     delBtn.disabled = moveBtn.disabled = !on.size;
-    delBtn.lastChild.textContent = on.size ? "Delete " + plural(on.size, "file") : "Delete";
+    delBtn.textContent = on.size ? "Delete " + plural(on.size, "file") : "Delete";
     all.checked = on.size === r.matches.length;
     all.indeterminate = on.size > 0 && on.size < r.matches.length;
   };
@@ -349,87 +762,64 @@ function searchResults(you, reply, meta, r) {
   });
   const rows = r.matches.map(m => {
     const id = "res-" + m.i;
-    const box = el("input", { type: "checkbox", id, onchange: e => { e.target.checked ? on.add(m.i) : on.delete(m.i); update(); } });
+    const box = el("input", { type: "checkbox", class: "check", id, onchange: e => { e.target.checked ? on.add(m.i) : on.delete(m.i); update(); } });
     boxes.push([box, m.i]);
     return el("tr", {},
-      el("td", { style: "width:34px" }, box),
-      el("td", {}, el("label", { for: id, class: "mono file" }, m.name), m.snippet ? el("div", { class: "snippet" }, m.snippet) : null),
-      el("td", { class: "mono muted" }, m.where),
-      el("td", { class: "muted nowrap" }, size(m.size_kb)),
-      el("td", { class: "muted nowrap" }, m.modified),
+      el("td", {}, box),
+      el("td", {}, el("div", { class: "file" }, fileIcon(m.name, 22),
+        el("div", {}, el("label", { for: id }, m.name), m.snippet ? el("div", { class: "snippet" }, m.snippet) : null))),
+      el("td", { class: "muted" }, m.where),
+      el("td", { class: "muted", style: "white-space:nowrap" }, m.modified),
+      el("td", { class: "muted", style: "white-space:nowrap" }, size(m.size_kb)),
       el("td", { class: "why" }, m.why),
-      el("td", {}, el("button", { class: "link nowrap", type: "button", onclick: () => api("/api/open", { i: m.i })
-        .then(x => note.replaceChildren(x.error ? bar("error", "Couldn't open the folder", x.error) : ""))
-        .catch(e => note.replaceChildren(bar("error", "The app is not answering", e.message))) }, "Show in folder")));
+      el("td", {}, button("Show in folder", () => api("/api/open", { i: m.i })
+        .then(x => note.replaceChildren(x.error ? notice("error", "Couldn't open the folder", x.error) : ""))
+        .catch(e => note.replaceChildren(notAnswering(e))), "link")));
   });
   const act = async (action) => {
     if (busy) return;
     setBusy(true, "Preparing…");
     try {
       const x = await api("/api/act", { selected: [...on], action, to: target.value });
-      if (x.error) note.replaceChildren(bar("error", "Nothing prepared", x.error));
-      else result(el("div", { class: "you" }, action === "delete" ? "Delete the files I picked" : "Move the files I picked to " + target.value), x);
+      if (x.error) note.replaceChildren(notice("error", "Nothing prepared", x.error));
+      else folderView(x, "");
     } catch (e) {
-      note.replaceChildren(bar("error", "The app is not answering", e.message));
+      note.replaceChildren(notAnswering(e));
     }
     setBusy(false);
   };
-  delBtn.addEventListener("click", () => act("delete"));
-  moveBtn.addEventListener("click", () => act("move"));
   target.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); act("move"); } });
   update();
-  show(you, reply, meta, note,
-    el("div", { style: "display:flex;align-items:flex-end;gap:12px" }, el("h2", { style: "flex:1" }, "Files found"), count),
-    el("div", { class: "card changes" }, el("table", {},
-      el("thead", {}, el("tr", {}, el("th", {}, all), el("th", {}, "File"), el("th", {}, "Folder"), el("th", {}, "Size"),
-        el("th", {}, "Changed"), el("th", {}, "Why it matched"), el("th"))),
-      el("tbody", {}, rows))),
-    el("div", { class: "commands" },
-      el("span", { class: "grow" }, "Tick files to delete or move them. You'll see a preview first, and nothing changes until you apply it."),
+  show(intro, reply, note,
+    el("section", { class: "win" },
+      el("div", { class: "bar" }, all, el("span", { class: "which" }, "Search results"), count),
+      el("div", { class: "body" }, el("table", { class: "details" },
+        el("thead", {}, el("tr", {}, el("th"), el("th", {}, "Name"), el("th", {}, "Folder"), el("th", {}, "Changed"), el("th", {}, "Size"),
+          el("th", {}, "Why it matched"), el("th"))),
+        el("tbody", {}, rows)))),
+    el("div", { class: "actions" },
+      el("span", { class: "grow" }, "Tick files to delete or move them. You'll see the result first, and nothing changes until you apply it."),
       delBtn, target, moveBtn));
 }
 
-async function applyPlan(you, selected) {
-  setBusy(true, "Applying…");
-  try {
-    const r = await api("/api/apply", { selected });
-    if (r.error) show(you, bar("error", "Not applied", r.error));
-    else {
-      const parts = [r.moved ? plural(r.moved, "file") + " moved" : "", r.recycled ? plural(r.recycled, "file") + " sent to the Recycle Bin" : ""];
-      show(bar("success", plural(r.moved + r.recycled, "change") + " applied to " + r.folder,
-        parts.filter(Boolean).join(", ") + ".\nUndo log: " + r.log,
-        el("button", { class: "btn", type: "button", onclick: undo }, icon("undo", 15), "Undo this run")),
-        el("div", {}, el("button", { class: "btn", type: "button", onclick: home }, "New request")));
-    }
-  } catch (e) {
-    show(bar("error", "The app is not answering", "Is app.py still running? " + e.message));
-  }
-  setBusy(false);
-}
+/* ---------------------------------------------------------------- start up */
 
-async function undo() {
-  if (busy) return;
-  setBusy(true, "Undoing…");
-  try {
-    const r = await api("/api/undo");
-    show(bar(r.error ? "error" : "info", r.error ? "Undo failed" : "Undo", r.error || r.message),
-      el("div", {}, el("button", { class: "btn", type: "button", onclick: home }, "New request")));
-  } catch (e) {
-    show(bar("error", "The app is not answering", e.message));
-  }
-  setBusy(false);
-}
-
-sendBtn.addEventListener("click", () => send());
-document.getElementById("undo").addEventListener("click", undo);
-input.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+document.getElementById("form").addEventListener("submit", e => { e.preventDefault(); send(); });
+undoBtn.addEventListener("click", undo);
+// Clicking the request box selects the request that is there, so typing a new one replaces it.
+let selectAll = false;
+input.addEventListener("mousedown", () => { selectAll = document.activeElement !== input; });
+input.addEventListener("mouseup", e => { if (selectAll) { e.preventDefault(); input.select(); selectAll = false; } });
+input.addEventListener("focus", () => input.select());
 
 api("/api/info").then(r => {
   info = r;
-  document.getElementById("model").textContent = r.model;
-  document.getElementById("base").textContent = r.base;
+  document.getElementById("model").textContent = r.model + " · " + ({ "llama-server": "llama.cpp", ollama: "Ollama" }[r.backend] || r.backend);
+  document.getElementById("base").textContent = "Folders under " + r.base;
+  document.getElementById("sandbox").hidden = !r.sandbox;
   home();
-}).catch(e => show(bar("error", "The app is not answering", e.message)));
+  input.focus();
+}).catch(e => show(notAnswering(e)));
 home();
 </script>
 </body>

@@ -52,10 +52,16 @@ Without `--base`, folder names mean your real folders (C:\Users\you\Downloads an
 python app.py --base sandbox        # opens http://127.0.0.1:8765 in your browser
 ```
 
-The same assistant with a window: pick an example or type a request, read the explanation, untick any change
-you don't want in the preview, then press Apply. "Undo last run" reverses the last applied changes. The page is
-served on this PC only, and only the page the app opened can use it. Press Ctrl+C in the terminal to quit.
-Options as for `cli.py` (`--base`, `--model`), plus `--port` and `--no-browser`.
+The same assistant in a window that works like a folder. Type a request or pick an example. For a plan you see two
+windows side by side: **Now**, every file in the folder with where it goes, and **After**, the folder as it will look
+once the changes are made: the new folders, renamed files, the files that stay, and what goes to the Recycle Bin.
+Double-click a folder in After to look inside, click anything to see why it is there, untick any change you don't
+want (After updates at once), then press Apply. The model's explanation is under the windows. "Undo last run"
+reverses the last applied changes. Search results ("find my cv") can be ticked, then deleted or moved into one folder
+the same way. The page is served on this PC only and loads nothing from the internet (its font is in
+`assistant/fonts`), and only the page the app opened can use it. Press Ctrl+C in the terminal to quit.
+Options as for `cli.py` (`--base`, `--model`), plus `--port` and `--no-browser`. How the page looks and why:
+[`docs/ui.md`](docs/ui.md).
 
 Or double-click `Folder Assistant.bat`: it asks whether to use the test sandbox (Enter) or your real folders
 (n), then opens the window. For a desktop icon: right-click it > Send to > Desktop (create shortcut).
@@ -101,7 +107,8 @@ At most 10 parts (400 files) per request.
 | `assistant/search.py` | Search without the chat model: your user folders (wherever Windows keeps them, also in OneDrive) and their subfolders, or the folder the request names ("in downloads"). Scores the name, the folders and the first text of documents; with an embedding model also the meaning ("resume" finds a CV). Document text and meanings are kept in `~\.local-assistant\search.sqlite` |
 | `assistant/executor.py` | Preview, run (Recycle Bin for deletes), undo log in `~\.local-assistant\undo` |
 | `cli.py` | Terminal chat |
-| `app.py`, `assistant/app.html`, `Folder Assistant.bat` | The app window: a page on 127.0.0.1 for the same request, preview, apply and undo; the .bat opens it with a double-click |
+| `app.py`, `assistant/app.html`, `Folder Assistant.bat` | The app window: a page on 127.0.0.1 for the same request. It shows the folder now and after the changes (app.py sends the folder's items and where each changed file ends up), then applies and undoes them; the .bat opens it with a double-click |
+| `assistant/fonts/` | Figtree, the page's font (SIL Open Font License, `OFL.txt`), served by app.py so the page needs no internet |
 | `make_sandbox.py` | Fake messy folders for testing |
 
 ## Building the training data
