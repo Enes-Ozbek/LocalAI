@@ -63,35 +63,42 @@ def preview(steps: list, folder: Path) -> str:
     return "\n".join(lines)
 
 
+
 def apply(steps: list) -> Path:
     from send2trash import send2trash
     UNDO_DIR.mkdir(parents=True, exist_ok=True)
     log_path = UNDO_DIR / f"{time.strftime('%Y%m%d-%H%M%S')}.json"
     done = []
     try:
-        
-        if s["op"] == "move":
-            dst = Path(s["dst"])
-        
-            # Recheck the destination immediately before execution.
-            # Another file may have appeared after the plan was created.
-            if dst.exists():
-                dst = _free_name(dst, set())
-        
-            created = [str(p) for p in _missing_parents(dst)]
-            dst.parent.mkdir(parents=True, exist_ok=True)
-        
-            shutil.move(s["src"], str(dst))
-        
-            # Record the actual destination so Undo restores the right file.
-            done.append({**s, "dst": str(dst), "created_dirs": created})
+        for s in steps:
+            if s["op"] == "move":
+                dst = Path(s["dst"])
 
+                # Recheck for a collision after planning.
+                if dst.exists():
+                    dst = _free_name(dst, set())
+
+                created = [str(p) for p in _missing_parents(dst)]
+                dst.parent.mkdir(parents=True, exist_ok=True)
+
+                shutil.move(s["src"], str(dst))
+
+                # Store the actual destination for Undo.
+                done.append({
+                    **s,
+                    "dst": str(dst),
+                    "created_dirs": created,
+                })
             else:
                 send2trash(s["src"])
                 done.append(s)
     finally:
-        log_path.write_text(json.dumps(done, indent=1, ensure_ascii=False), encoding="utf-8")
+        log_path.write_text(
+            json.dumps(done, indent=1, ensure_ascii=False),
+            encoding="utf-8",
+        )
     return log_path
+
 
 
 def _missing_parents(path: Path) -> list:
