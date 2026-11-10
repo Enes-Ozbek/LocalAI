@@ -63,6 +63,7 @@ def preview(steps: list, folder: Path) -> str:
     return "\n".join(lines)
 
 
+
 def apply(steps: list) -> Path:
     from send2trash import send2trash
     UNDO_DIR.mkdir(parents=True, exist_ok=True)
@@ -71,16 +72,33 @@ def apply(steps: list) -> Path:
     try:
         for s in steps:
             if s["op"] == "move":
-                created = [str(p) for p in _missing_parents(Path(s["dst"]))]
-                Path(s["dst"]).parent.mkdir(parents=True, exist_ok=True)
-                shutil.move(s["src"], s["dst"])
-                done.append({**s, "created_dirs": created})
+                dst = Path(s["dst"])
+
+                # Recheck for a collision after planning.
+                if dst.exists():
+                    dst = _free_name(dst, set())
+
+                created = [str(p) for p in _missing_parents(dst)]
+                dst.parent.mkdir(parents=True, exist_ok=True)
+
+                shutil.move(s["src"], str(dst))
+
+                # Store the actual destination for Undo.
+                done.append({
+                    **s,
+                    "dst": str(dst),
+                    "created_dirs": created,
+                })
             else:
                 send2trash(s["src"])
                 done.append(s)
     finally:
-        log_path.write_text(json.dumps(done, indent=1, ensure_ascii=False), encoding="utf-8")
+        log_path.write_text(
+            json.dumps(done, indent=1, ensure_ascii=False),
+            encoding="utf-8",
+        )
     return log_path
+
 
 
 def _missing_parents(path: Path) -> list:
