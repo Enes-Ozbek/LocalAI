@@ -37,3 +37,5 @@ def test_destination_created_after_planning_is_not_overwritten(base):
 
     # The newly created destination must remain untouched.
     assert target.read_text(encoding="utf-8") == "Important existing content"
+    
+# Regression test: destination collision after planning.
