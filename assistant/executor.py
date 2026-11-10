@@ -69,12 +69,23 @@ def apply(steps: list) -> Path:
     log_path = UNDO_DIR / f"{time.strftime('%Y%m%d-%H%M%S')}.json"
     done = []
     try:
-        for s in steps:
-            if s["op"] == "move":
-                created = [str(p) for p in _missing_parents(Path(s["dst"]))]
-                Path(s["dst"]).parent.mkdir(parents=True, exist_ok=True)
-                shutil.move(s["src"], s["dst"])
-                done.append({**s, "created_dirs": created})
+        
+        if s["op"] == "move":
+            dst = Path(s["dst"])
+        
+            # Recheck the destination immediately before execution.
+            # Another file may have appeared after the plan was created.
+            if dst.exists():
+                dst = _free_name(dst, set())
+        
+            created = [str(p) for p in _missing_parents(dst)]
+            dst.parent.mkdir(parents=True, exist_ok=True)
+        
+            shutil.move(s["src"], str(dst))
+        
+            # Record the actual destination so Undo restores the right file.
+            done.append({**s, "dst": str(dst), "created_dirs": created})
+
             else:
                 send2trash(s["src"])
                 done.append(s)
