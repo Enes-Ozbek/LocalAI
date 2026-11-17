@@ -37,6 +37,7 @@ def base(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     make_sandbox.main()
     monkeypatch.setattr(executor, "UNDO_DIR", tmp_path / "undo")
+    monkeypatch.setattr(executor, "QUARANTINE_DIR", tmp_path / "quarantine")
     monkeypatch.setattr(search, "INDEX", tmp_path / "search.sqlite")
     monkeypatch.setattr(llm, "embed", lambda texts: None)
     monkeypatch.setattr(agent, "QUESTION_MODE", "code")  # questions without the model; test_questions scripts it

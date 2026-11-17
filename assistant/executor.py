@@ -2,16 +2,25 @@
 
 Deletes go to the Recycle Bin. Every run is written to an undo log first. Undo moves files back and takes
 deleted files out of the Recycle Bin again.
+
+App folders removed by the leftover cleanup (leftovers.py) go to a quarantine folder instead: a move on the same
+drive is instant even for 20 GB, Undo always works, and the Recycle Bin can skip folders that big without asking.
+The quarantine is emptied after QUARANTINE_DAYS, or when the user presses Empty now.
 """
 
+import errno
 import json
 import os
 import shutil
+import stat
+import sys
 import time
 from pathlib import Path
 from urllib.parse import unquote
 
 UNDO_DIR = Path.home() / ".local-assistant" / "undo"
+QUARANTINE_DIR = Path.home() / ".local-assistant" / "quarantine"
+QUARANTINE_DAYS = 7
 
 
 def plan_steps(folder: Path, changes: list) -> list:
@@ -102,7 +111,7 @@ def undo_last() -> str:
         return "Nothing to undo."
     log = logs[-1]
     steps = json.loads(log.read_text(encoding="utf-8"))
-    restored, back, missing = 0, 0, []
+    restored, back, missing, gone = 0, 0, [], []
     for s in reversed(steps):
         if s["op"] == "move" and Path(s["dst"]).exists() and not Path(s["src"]).exists():
             shutil.move(s["dst"], s["src"])
@@ -112,13 +121,22 @@ def undo_last() -> str:
                     Path(d).rmdir()  # only removes folders we created that are now empty
                 except OSError:
                     pass
+        elif s["op"] == "quarantine":
+            if _unquarantine(s):
+                restored += 1
+            else:
+                gone.append(Path(s["src"]).name)
         elif s["op"] == "recycle":
             if restore_deleted(Path(s["src"]), s.get("at", 0)):
                 back += 1
             else:
                 missing.append(Path(s["src"]).name)
     log.rename(log.with_suffix(".undone"))
-    msg = f"Moved {restored} file(s) back." if restored or not (back or missing) else ""
+    msg = f"Moved {restored} {'folder' if steps and steps[0]['op'] == 'quarantine' else 'file'}(s) back." \
+        if restored or not (back or missing or gone) else ""
+    if gone:
+        msg += (f" {len(gone)} folder(s) are not in the quarantine any more (emptied, or a folder of that name is "
+                f"back in their place): {', '.join(gone)}.")
     if back:
         msg += f" Put {back} deleted file(s) back from the Recycle Bin."
     if missing:
@@ -212,3 +230,132 @@ def _freedesktop_trash(src: Path):
             except (OSError, KeyError, ValueError):
                 continue
             yield where, deleted, trash / "files" / info.name[:-len(".trashinfo")], info
+
+
+# ---- the quarantine for app folders (leftover cleanup)
+
+def apply_cleanup(steps: list) -> tuple:
+    """Moves each app folder (or, for a cache, everything in it) into a new quarantine folder.
+    Returns (undo log, [(folder, why it failed)]). A folder a program still holds open fails on its own and stays
+    where it was; the rest go on. Only a plain rename is used, never copy-and-delete, so a folder is never left
+    half moved."""
+    UNDO_DIR.mkdir(parents=True, exist_ok=True)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    log_path, box = UNDO_DIR / f"{stamp}.json", QUARANTINE_DIR / stamp
+    done, failed = [], []
+    try:
+        for k, s in enumerate(steps, 1):
+            src, dst = Path(s["src"]), box / str(k) / Path(s["src"]).name
+            try:
+                if not src.is_dir():
+                    raise FileNotFoundError("it isn't there any more")
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                if s.get("contents_only"):
+                    dst.mkdir()
+                    moved = []
+                    for child in sorted(src.iterdir()):
+                        try:
+                            _rename(child, dst / child.name)
+                            moved.append(child.name)
+                        except OSError:
+                            pass  # a file the program has open: the rest of the cache still goes
+                    if not moved and any(src.iterdir()):
+                        raise PermissionError("its files are in use")
+                    done.append({**s, "dst": str(dst), "moved": moved})
+                else:
+                    _rename(src, dst)
+                    done.append({**s, "dst": str(dst)})
+            except OSError as e:
+                failed.append((s.get("folder") or str(src), _why(e)))
+    finally:
+        log_path.write_text(json.dumps(done, indent=1, ensure_ascii=False), encoding="utf-8")
+    return log_path, failed
+
+
+def _rename(src: Path, dst: Path):
+    try:
+        os.rename(src, dst)
+    except OSError as e:
+        # another drive (a sandbox on D:, a test folder): only then is a copy allowed
+        if e.errno == errno.EXDEV or getattr(e, "winerror", None) == 17:
+            shutil.move(str(src), str(dst))
+        else:
+            raise
+
+
+def _why(e: OSError) -> str:
+    if isinstance(e, PermissionError) or getattr(e, "winerror", None) in (5, 32):
+        return "a program is using it (close it and try again)"
+    return str(e.strerror or e)
+
+
+def _unquarantine(s: dict) -> bool:
+    src, dst = Path(s["src"]), Path(s["dst"])
+    if not dst.exists():
+        return False
+    if s.get("contents_only"):
+        src.mkdir(parents=True, exist_ok=True)
+        for name in s.get("moved", []):
+            if (dst / name).exists() and not (src / name).exists():
+                _rename(dst / name, src / name)
+        _remove_empty(dst)
+        return True
+    if src.exists():
+        return False
+    src.parent.mkdir(parents=True, exist_ok=True)
+    _rename(dst, src)
+    _remove_empty(dst.parent)
+    return True
+
+
+def _remove_empty(folder: Path):
+    for d in (folder, folder.parent):
+        try:
+            d.rmdir()
+        except OSError:
+            return
+
+
+def quarantine_size() -> int:
+    """Bytes waiting in the quarantine."""
+    total = 0
+    for root, _, files in os.walk(QUARANTINE_DIR):
+        for f in files:
+            try:
+                total += os.lstat(os.path.join(root, f)).st_size
+            except OSError:
+                pass
+    return total
+
+
+def empty_quarantine(older_than_days: float = 0) -> tuple:
+    """Deletes quarantined folders for good: all of them, or those older than the given days (the app does that
+    with QUARANTINE_DAYS when it starts). Returns (runs emptied, bytes freed). Their undo logs are marked, so
+    Undo says plainly that they are gone."""
+    if not QUARANTINE_DIR.is_dir():
+        return 0, 0
+    cutoff, runs, freed = time.time() - older_than_days * 86400, 0, 0
+    for box in sorted(QUARANTINE_DIR.iterdir()):
+        try:
+            made = time.mktime(time.strptime(box.name, "%Y%m%d-%H%M%S"))
+        except ValueError:
+            made = box.stat().st_mtime
+        if not box.is_dir() or made > cutoff:
+            continue
+        size = sum(os.lstat(os.path.join(r, f)).st_size for r, _, fs in os.walk(box) for f in fs)
+        shutil.rmtree(box, **({"onexc": _force} if sys.version_info >= (3, 12) else {"onerror": _force}))
+        if not box.exists():
+            runs, freed = runs + 1, freed + size
+            log = UNDO_DIR / f"{box.name}.json"
+            if log.exists():
+                log.rename(log.with_suffix(".emptied"))
+    return runs, freed
+
+
+def _force(func, path, _):
+    """Read-only files (git keeps many) can't be deleted until they are made writable."""
+    try:
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+    except OSError:
+        pass

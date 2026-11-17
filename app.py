@@ -25,7 +25,7 @@ from assistant import agent, executor, llm, safety, scanner
 PAGE = Path(__file__).resolve().parent / "assistant" / "app.html"
 FONTS = {name: PAGE.parent / "fonts" / name for name in ("figtree-latin.woff2", "figtree-latin-ext.woff2")}
 MAX_LISTED = 2000  # files of the folder sent to the page for the After window
-VERSION = 3        # the page checks it: an app started before an update serves the new page with old code
+VERSION = 4        # the page checks it: an app started before an update serves the new page with old code
 TOKEN = secrets.token_urlsafe(16)  # only the page this app served can call the API
 EXAMPLES = [
     ("check files in my downloads/new folder1 and tell me what those are then organise them",
@@ -35,6 +35,7 @@ EXAMPLES = [
     ("delete all the .tmp files in archive", "A bulk job in a big folder: only those files go to the model"),
     ("find my cv", "Search by name, words inside or meaning"),
     ("how many files are there?", "A question: the model decides where to look, code counts exactly"),
+    ("find leftovers of apps I uninstalled", "App folders no installed program owns; kept for 7 days before they go"),
 ]
 
 
@@ -51,7 +52,9 @@ class App:
     def info(self) -> dict:
         return {"version": VERSION, "model": llm.label(self.model), "backend": llm.BACKEND, "base": str(self.base),
                 "sandbox": self.base.name.lower() == "sandbox", "status": self.status(), "runtime": llm.status(),
-                "examples": [{"text": t, "hint": h} for t, h in EXAMPLES]}
+                "examples": [{"text": t, "hint": h} for t, h in EXAMPLES],
+                "quarantine_mb": round(executor.quarantine_size() / 1048576, 1),
+                "quarantine_days": executor.QUARANTINE_DAYS}
 
     def start(self, text: str) -> dict:
         """Starts a request in the background and returns at once. A request already running is not stopped: the
@@ -92,7 +95,7 @@ class App:
     def run(self, text: str) -> dict:
         self.progress = ""
         r = self.session.run(text, progress=self._progress)
-        self.last = r if r.kind == "proposal" else None
+        self.last = r if r.kind in ("proposal", "cleanup") else None
         self.found = r.matches if r.kind == "search" else []
         return self._result(r) | {"matches": [{"i": i, **{k: m[k] for k in ("name", "where", "size_kb", "modified",
                                                                          "why", "snippet")}}
@@ -143,12 +146,24 @@ class App:
         return {"ok": True}
 
     def _result(self, r, by_path: bool = False) -> dict:
+        if r.kind == "cleanup":
+            return self._cleanup(r)
         return {"kind": r.kind, "text": r.text, "seconds": r.seconds, "question": bool(r.tools or r.by_code),
                 "folder": self._show(r.folder) if r.folder else "", "picked": by_path,
                 "here": self._contents(r.folder) if r.kind == "proposal" else None,
                 "steps": [self._step(i, s, r.folder, self.base if by_path else None) for i, s in enumerate(r.steps)],
                 "blocked": [{"file": b.get("file", ""), "action": b.get("action", ""), "why": b["blocked"]}
                             for b in r.blocked]}
+
+    @staticmethod
+    def _cleanup(r) -> dict:
+        """A leftover cleanup: one row per app folder, grouped on the page by what the model said it is."""
+        keys = ("folder", "verdict", "app", "reason", "size_kb", "last_change_days", "checked", "look")
+        return {"kind": "cleanup", "text": r.text, "seconds": r.seconds, "question": False, "folder": "",
+                "picked": False, "here": None, "quarantine_days": executor.QUARANTINE_DAYS,
+                "steps": [{"i": i, **{k: s[k] for k in keys}} for i, s in enumerate(r.steps)],
+                "blocked": [{"file": b.get("folder", ""), "action": b.get("verdict", ""), "why": b["blocked"],
+                             "app": b.get("app", ""), "reason": b.get("reason", "")} for b in r.blocked]}
 
     @staticmethod
     def _contents(folder: Path) -> dict:
@@ -165,13 +180,25 @@ class App:
         steps = [s for i, s in enumerate(self.last.steps) if i in chosen]
         if not steps:
             return {"error": "No changes are selected."}
-        folder, self.last = self.last.folder, None  # a plan is applied at most once
+        folder, kind, self.last = self.last.folder, self.last.kind, None  # a plan is applied at most once
+        if kind == "cleanup":
+            log, failed = executor.apply_cleanup(steps)
+            gone = {f for f, _ in failed}
+            done = [s for s in steps if s["folder"] not in gone]
+            return {"cleanup": True, "moved": len(done), "freed_kb": sum(s["size_kb"] for s in done),
+                    "failed": [{"folder": f, "why": w} for f, w in failed], "log": str(log),
+                    "quarantine_days": executor.QUARANTINE_DAYS}
         log = executor.apply(steps)
         moved = sum(s["op"] == "move" for s in steps)
         return {"folder": self._show(folder), "moved": moved, "recycled": len(steps) - moved, "log": str(log)}
 
     def undo(self) -> dict:
         return {"message": executor.undo_last()}
+
+    def empty(self) -> dict:
+        """Empty now: the quarantined app folders are deleted for good (Undo can't bring them back after this)."""
+        runs, freed = executor.empty_quarantine()
+        return {"runs": runs, "freed_mb": round(freed / 1048576, 1)}
 
     def _show(self, folder: Path) -> str:
         try:
@@ -206,7 +233,7 @@ def handler(app: App, port: int):
     routes = {"/api/info": lambda body: app.info(), "/api/run": lambda body: app.start(body.get("text", "").strip()),
               "/api/apply": lambda body: app.apply(body.get("selected", [])), "/api/undo": lambda body: app.undo(),
               "/api/act": lambda body: app.act(body.get("selected", []), body.get("action", ""), body.get("to", "")),
-              "/api/open": lambda body: app.open(body.get("i")),
+              "/api/open": lambda body: app.open(body.get("i")), "/api/empty": lambda body: app.empty(),
               "/api/progress": lambda body: app.status()}
 
     def call(path, body):
@@ -279,6 +306,8 @@ def main():
     print(f"Model: {llm.label(args.model)}   Folders under: {app.base}\nOpen {url}   (Ctrl+C to quit)")
     # The model runs only while the app does: it starts now (nothing has to start with Windows) and stops on exit.
     threading.Thread(target=llm.start, daemon=True).start()
+    # app folders removed by a leftover cleanup more than QUARANTINE_DAYS ago are deleted for good now
+    threading.Thread(target=executor.empty_quarantine, args=(executor.QUARANTINE_DAYS,), daemon=True).start()
     if not args.no_browser:
         webbrowser.open(url)
     try:

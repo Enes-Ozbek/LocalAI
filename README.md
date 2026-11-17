@@ -71,6 +71,34 @@ Options as for `cli.py` (`--base`, `--model`), plus `--port` and `--no-browser`.
 Or double-click `Folder Assistant.bat`: it asks whether to use the test sandbox (Enter) or your real folders
 (n), then opens the window. For a desktop icon: right-click it > Send to > Desktop (create shortcut).
 
+## Leftovers of uninstalled apps
+
+"Find leftovers of apps I uninstalled" or "clean up after Ollama" looks at whole app folders, not files: the
+subfolders of `AppData\Local`, `Roaming` and `LocalLow`, the apps in `AppData\Local\Programs`, `.cache` and
+`.config`, and dot-folders in your home folder (a home folder with 764,000 files has only a few hundred of these).
+Windows' own folders (Microsoft, Packages, Temp and the like), Claude's and this app's are never looked at.
+
+1. Code reads what is installed (the registry's uninstall list, Program Files, `AppData\Local\Programs`, Start Menu
+   shortcuts, Store apps) and what is running, then writes one fact sheet per app folder: size, files, days since
+   anything changed, kinds of files (program, cache/logs, saves, documents, photos, settings), the 3 biggest
+   subfolders, the installed programs whose names come closest, and whether a running program uses it.
+2. The model gets the sheets 25 at a time (`schema.LEFTOVER_PROMPT`, tool `propose_cleanup`) and names each
+   folder that is a **leftover** (its app is gone), a **cache** of an installed app, or one to **ask** about
+   (saves, documents, projects, or unsure). Folders it leaves out are kept.
+3. Hard rules (`leftovers.check`): never Windows' or this app's folders or one a running program uses; a leftover
+   changed in the last 14 days is held back unless you named its app; a "cache" with no cache files is held back;
+   a leftover an installed program's name matches closely, a folder with your own files (saves, documents, photos,
+   a git project) or one that may hold sign-in keys (`.aws`, `.docker`...) is shown unticked.
+4. The page lists the folders by kind with size, last change and the model's reason. Ticked folders are moved to
+   `~\.local-assistant\quarantine` (a cache is emptied, its folder stays), not to the Recycle Bin: the move is
+   instant even for 20 GB, Undo always works, and the Recycle Bin can delete very big folders for good without
+   asking. A folder a program still has open is skipped and named. The quarantine is emptied 7 days later, when
+   the app starts, or when you press Empty now.
+
+Fake leftovers are in the sandbox (`make_sandbox.APPS`, with `sandbox\installed.json` as the fake PC's installed
+programs). `python bench/leftovers.py` scores the model on them; `python bench/leftovers.py --real` runs on your own
+AppData without moving anything and writes a CSV for you to check by hand.
+
 ## How it works
 
 ```
@@ -110,7 +138,8 @@ At most 10 parts (400 files) per request.
 | `assistant/filters.py` | Reads which files a request is about: kinds, extensions, names, dates, sizes. Folder names ("move the pdfs to documents") are not kinds of file |
 | `assistant/answers.py` | The read-only tools for questions (list, summary, search) and the code answers used when the model doesn't look |
 | `assistant/search.py` | Search without the chat model: your user folders (wherever Windows keeps them, also in OneDrive) and their subfolders, or the folder the request names ("in downloads"). Scores the name, the folders and the first text of documents; with an embedding model also the meaning ("resume" finds a CV). Document text and meanings are kept in `~\.local-assistant\search.sqlite` |
-| `assistant/executor.py` | Preview, run (Recycle Bin for deletes), undo log in `~\.local-assistant\undo`; undo moves files back and restores deleted ones from the Recycle Bin (it reads the bin's `$I` entries; on Linux the trash's `.trashinfo` files) |
+| `assistant/executor.py` | Preview, run (Recycle Bin for deletes), undo log in `~\.local-assistant\undo`; undo moves files back and restores deleted ones from the Recycle Bin (it reads the bin's `$I` entries; on Linux the trash's `.trashinfo` files). App folders of a leftover cleanup go to `~\.local-assistant\quarantine` instead |
+| `assistant/leftovers.py` | Leftovers of uninstalled apps: installed programs, one fact sheet per app folder, the model in parts of 25, the hard rules |
 | `cli.py` | Terminal chat |
 | `app.py`, `assistant/app.html`, `assistant/fonts/`, `Folder Assistant.bat` | The app window: a page on 127.0.0.1 for the same request, a before/after folder view, apply and undo; the .bat opens it with a double-click |
 | `make_sandbox.py` | Fake messy folders for testing |
@@ -129,8 +158,12 @@ At most 10 parts (400 files) per request.
    are there?", "the biggest file in archive", "find my cv", follow-ups like "and desktop?". The model calls the
    read-only tools and answers from what they return; the tool results come from the same code the app uses, so
    no teacher model is needed and every number is right.
-6. `python dataset/split.py`: train / val / test, split by folder so the test folders are new to the model.
-7. `python dataset/stats.py`: conversations, training examples and file decisions per split, for the report.
+6. `python dataset/make_leftovers.py`: 300 made-up PCs for the leftover cleanup (about 4,300 folder decisions; `--pcs
+   500` for about 7,000). Each has real-world apps, some installed and some not, and the folders they keep in
+   AppData; the facts come from the app's own code and the right answer follows from them, so no teacher model is
+   needed.
+7. `python dataset/split.py`: train / val / test, split by folder (or made-up PC) so the test ones are new to the model.
+8. `python dataset/stats.py`: conversations, training examples, file decisions and folder decisions per split.
 
 Where the data comes from, its licences and the ethics check: [docs/data-card.md](docs/data-card.md).
 
@@ -146,8 +179,9 @@ pip install pytest
 python -m pytest
 ```
 
-49 tests of the safety rules, the request flow (with scripted model answers), big folders in parts, request
-filters, search, questions and follow-ups, Apply + Undo on a sandbox, and the data pipeline. No model or GPU is needed. The test folders go in `.pytest_tmp` in the project, because Windows keeps temporary folders in AppData, which the safety rules protect. GitHub runs them on Windows and Linux on every push
+91 tests of the safety rules, the request flow (with scripted model answers), big folders in parts, request
+filters, search, questions and follow-ups, the leftover cleanup (rules, quarantine, Undo, Empty now), Apply + Undo
+on a sandbox, and the data pipeline. No model or GPU is needed. The test folders go in `.pytest_tmp` in the project, because Windows keeps temporary folders in AppData, which the safety rules protect. GitHub runs them on Windows and Linux on every push
 (`.github/workflows/tests.yml`).
 
 ## Measuring
@@ -168,6 +202,14 @@ python bench/questions.py                                 # 17 questions about t
 
 Checks each answer against exact counts and says how many the model answered itself (with its tools) and how many
 needed the code backup, with the tool calls and times, in `results\questions_<model>.csv`.
+
+```
+python bench/leftovers.py                                 # the sandbox's 20 app folders, each with a known answer
+python bench/leftovers.py --real                          # your own AppData: nothing is moved, a CSV to check
+```
+
+Leftovers found, wrong removals (an installed app's folder or your own files that would go if you pressed Clean up
+without looking; should be 0) and right answers overall, in `results\leftovers_<model>.csv`.
 
 ## Fine-tuning (Google Colab, free T4 GPU)
 

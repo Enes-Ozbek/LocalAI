@@ -10,6 +10,8 @@ Counted per split:
                    the answer moves, renames or deletes it, or leaves it where it is
   changes          files the answer moves, renames or deletes
   questions        conversations where the model answers a question with the read-only tools
+  folder decisions one app folder in a leftover cleanup (dataset/make_leftovers.py): the answer calls it a
+                   leftover, a cache, one to ask about, or keeps it
 """
 
 import argparse
@@ -27,6 +29,8 @@ DEFINITIONS = """- **Conversation:** one user request with the whole answer.
 - **Change:** a file the answer moves, renames or deletes.
 - **Question:** a conversation where the model answers a question about files with the read-only tools
   (count, sort, filter, search), made by dataset/make_questions.py.
+- **Folder decision:** one app folder in a leftover cleanup, made by dataset/make_leftovers.py. The answer calls it
+  a leftover, a cache, one to ask about, or keeps it.
 """
 
 
@@ -41,12 +45,15 @@ def count(path: Path) -> dict:
         kinds[kind] += 1
         msgs = rec["messages"]
         out["conversations"] += 1
-        first = max(i for i, m in enumerate(msgs) if m["role"] == "user") if rec.get("mode") == "question" else 0
+        first = max(i for i, m in enumerate(msgs) if m["role"] == "user") if rec.get("mode") == "question" else \
+            max(i for i, m in enumerate(msgs) if m["role"] == "tool") if rec.get("mode") == "cleanup" else 0
         out["examples"] += sum(m["role"] == "assistant" for m in msgs[first:])  # as train/sft_data.py counts
         if kind in CHANGE_REQUESTS:
             out["file decisions"] += sum(len(json.loads(m["content"])["files"]) for m in msgs if m["role"] == "tool")
         if rec.get("mode") == "question":
             out["questions"] += 1
+        if rec.get("mode") == "cleanup":
+            out["folder decisions"] += sum(len(json.loads(m["content"])["folders"]) for m in msgs if m["role"] == "tool")
         out["changes"] += sum(len(tc["function"]["arguments"].get("changes", []))
                               for m in msgs for tc in m.get("tool_calls") or []
                               if tc["function"]["name"] == "propose_changes")
@@ -59,7 +66,7 @@ def main():
     ap.add_argument("--md", help="also write the table to this Markdown file")
     args = ap.parse_args()
     paths = [Path(f) for f in args.files] or [HERE / f"{s}.jsonl" for s in SPLITS if (HERE / f"{s}.jsonl").exists()]
-    cols = ("conversations", "examples", "file decisions", "changes", "questions")
+    cols = ("conversations", "examples", "file decisions", "changes", "questions", "folder decisions")
     rows, total = [], Counter()
     for p in paths:
         c = count(p)

@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-from . import answers, executor, filters, llm, safety, scanner, search
+from . import answers, executor, filters, leftovers, llm, safety, scanner, search
 from .schema import READ_TOOLS, SYSTEM_PROMPT, TOOLS, question_prompt, tool_result
 
 ASK_FOLDER = "Which folder do you mean? You can type its name or path, for example 'Downloads' or 'Desktop/new folder'."
@@ -54,7 +54,7 @@ FOLLOW_UP = re.compile(r"^(?:(?:and|what|how)\s+about|and|also|i\s+meant?|it'?s|
 
 @dataclass
 class Result:
-    kind: str                       # "proposal", "explain", "ask", "refuse", "error", "search"
+    kind: str                       # "proposal", "explain", "ask", "refuse", "error", "search", "cleanup"
     text: str = ""
     folder: Path = None
     steps: list = field(default_factory=list)
@@ -267,6 +267,9 @@ def run(user_text: str, base: Path = Path.home(), model: str = None, progress=No
         history: list = ()) -> Result:
     """progress(text), if given, is told which part of a big folder the model is on. last_folder and history:
     the folder and the messages before this one (Session), for questions."""
+    if leftovers.wants_leftovers(user_text):  # leftovers of uninstalled apps: whole app folders, see leftovers.py
+        p = leftovers.plan(user_text, base, model, progress)
+        return Result("cleanup", p["text"], folder=base, steps=p["steps"], blocked=p["blocked"], seconds=p["seconds"])
     if is_question(user_text):
         if QUESTION_MODE == "code":
             r = _code_answer(user_text, base, last_folder, progress)
