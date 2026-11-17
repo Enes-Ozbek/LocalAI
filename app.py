@@ -25,7 +25,7 @@ from assistant import agent, executor, llm, safety, scanner
 PAGE = Path(__file__).resolve().parent / "assistant" / "app.html"
 FONTS = {name: PAGE.parent / "fonts" / name for name in ("figtree-latin.woff2", "figtree-latin-ext.woff2")}
 MAX_LISTED = 2000  # files of the folder sent to the page for the After window
-VERSION = 2        # the page checks it: an app started before an update serves the new page with old code
+VERSION = 3        # the page checks it: an app started before an update serves the new page with old code
 TOKEN = secrets.token_urlsafe(16)  # only the page this app served can call the API
 EXAMPLES = [
     ("check files in my downloads/new folder1 and tell me what those are then organise them",
@@ -50,7 +50,7 @@ class App:
 
     def info(self) -> dict:
         return {"version": VERSION, "model": llm.label(self.model), "backend": llm.BACKEND, "base": str(self.base),
-                "sandbox": self.base.name.lower() == "sandbox", "status": self.status(),
+                "sandbox": self.base.name.lower() == "sandbox", "status": self.status(), "runtime": llm.status(),
                 "examples": [{"text": t, "hint": h} for t, h in EXAMPLES]}
 
     def start(self, text: str) -> dict:
@@ -76,11 +76,13 @@ class App:
 
     def status(self) -> dict:
         """The latest request: still running (with what it is doing and for how long) or its result."""
-        job = self.job
+        job, runtime = self.job, llm.status()
         if job is None:
-            return {"id": 0, "running": False}
-        return {"id": job["id"], "text": job["text"], "running": job["result"] is None, "progress": self.progress,
-                "seconds": round(time.time() - job["started"]), "result": job["result"]}
+            return {"id": 0, "running": False, "runtime": runtime}
+        progress = self.progress or ("Loading the model on your GPU first. It starts when the app opens and takes "
+                                     "a few seconds." if runtime["loading"] else "")
+        return {"id": job["id"], "text": job["text"], "running": job["result"] is None, "progress": progress,
+                "seconds": round(time.time() - job["started"]), "result": job["result"], "runtime": runtime}
 
     def busy_text(self) -> str:
         job = self.job
@@ -275,12 +277,16 @@ def main():
     app = App(Path(args.base).resolve(), args.model)
     server = ThreadingHTTPServer(("127.0.0.1", args.port), handler(app, args.port))
     print(f"Model: {llm.label(args.model)}   Folders under: {app.base}\nOpen {url}   (Ctrl+C to quit)")
+    # The model runs only while the app does: it starts now (nothing has to start with Windows) and stops on exit.
+    threading.Thread(target=llm.start, daemon=True).start()
     if not args.no_browser:
         webbrowser.open(url)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
+    finally:
+        llm.stop()  # also done when the window is closed instead (see llm._stop_on_window_close)
 
 
 if __name__ == "__main__":

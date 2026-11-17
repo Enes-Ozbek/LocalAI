@@ -19,8 +19,11 @@ pip install -r requirements.txt
 ```
 
 The model: put the fine-tuned `assistant-r8.Q4_K_M.gguf` in `models\` and llama.cpp's Windows Vulkan build in
-`..\tools\llama.cpp\bin` (next to this folder). The app then starts llama.cpp by itself and stops it when you quit.
-Without them it uses Ollama instead: `ollama pull qwen3.5:4b-q4_K_M` (or `set LLM_BACKEND=ollama` to choose it).
+`..\tools\llama.cpp\bin` (next to this folder). The app starts llama.cpp by itself when it opens (the window shows
+"loading" and then "ready") and stops it when you quit, so nothing has to run before the app, and Ollama isn't needed.
+Without those files it uses Ollama instead: `ollama pull qwen3.5:4b-q4_K_M` (or `set LLM_BACKEND=ollama` to choose
+it). If Ollama isn't running, the app starts `ollama serve` itself and stops it when you quit. Ollama's installer
+also starts Ollama with Windows; to stop that, open Task Manager > Startup apps, right-click Ollama, Disable.
 
 Search by meaning (optional): put `nomic-embed-text-v1.5.Q8_0.gguf` (about 140 MB, from
 huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF) in `models\` too; the app starts it on port 8081 when you search.

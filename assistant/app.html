@@ -314,8 +314,24 @@ function home() {
       el("div", { class: "fv-bar" }, el("span", { class: "which" }, "Try one of these")),
       (info ? info.examples : []).map(x => el("button", { class: "fv-ex", type: "button", onclick: () => send(x.text) },
         el("span", {}, x.text), el("span", { class: "fa-small fa-muted" }, x.hint)))),
-    info ? el("p", { class: "fa-small fa-muted", style: "margin:0" }, "Model: " + info.model + " · Folders under: " + info.base +
-      " · Deletes go to the Recycle Bin.") : null);
+    info?.runtime?.error ? el("div", { class: "fv-note", role: "alert" }, "The model didn’t start: " + info.runtime.error.replace(/\.$/, "") +
+      ". Your next request tries again.") : null,
+    info ? el("p", { class: "fa-small fa-muted", style: "margin:0" }, "Model: " + info.model + " (",
+      el("span", { id: "model-state" }, modelState()), ") · Folders under: " + info.base + " · Deletes go to the Recycle Bin.") : null);
+}
+// The app starts the model when it opens and closes it when it quits: show whether it is loaded yet.
+function modelState() {
+  const rt = info && info.runtime;
+  return !rt ? "" : rt.loading ? "loading on your GPU…" : rt.ready ? "ready" : rt.error ? "didn’t start" : "starts with your first request";
+}
+async function watchModel() {
+  while (info?.runtime?.loading) {
+    await pause(1500);
+    try { info.runtime = (await api("/api/info")).runtime; } catch (e) { return; }
+    const shown = document.getElementById("model-state");
+    if (shown && !info.runtime.error) shown.textContent = modelState();
+    else if (shown) home();
+  }
 }
 
 // ---- a request
@@ -363,6 +379,7 @@ async function follow(note) {
       continue;
     }
     if (me !== following) return;
+    if (info && st.runtime) info.runtime = st.runtime;  // a request may have started the model again
     if (!st.running) {
       setBusy(false);
       if (!st.result) return home();
@@ -791,7 +808,7 @@ undoBtn.addEventListener("click", undo);
 
 api("/api/info").then(r => {
   info = r;
-  if (r.version !== 2) {  // the window is new but the app running in the background is not
+  if (r.version !== 3) {  // the window is new but the app running in the background is not
     setBusy(true);
     return show(head("Restart the app", "This window was updated, but the app that was already running is the old one. " +
       "Close the black Folder Assistant window (or press Ctrl+C in it), then open Folder Assistant.bat again."));
@@ -799,6 +816,7 @@ api("/api/info").then(r => {
   document.getElementById("sandbox").hidden = !r.sandbox;
   if (r.status.running) follow();
   else home();
+  watchModel();
 }).catch(notAnswering);
 home();
 input.focus();

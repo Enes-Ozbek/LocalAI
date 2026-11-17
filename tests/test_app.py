@@ -123,3 +123,13 @@ def test_the_page_api_checks_the_token_and_answers_errors_as_json(base):
                 assert e.code == 404
     finally:
         server.shutdown()
+
+
+def test_a_request_sent_while_the_model_loads_says_so(base, monkeypatch):
+    a = app_module.App(base, model=None)
+    monkeypatch.setattr(app_module.llm, "_state", {"loading": True, "ready": False, "error": ""})
+    a.job = {"id": 1, "text": "organise downloads", "started": time.time(), "result": None}
+    assert a.status()["progress"].startswith("Loading the model on your GPU")
+    assert a.info()["runtime"]["loading"]
+    a.progress = "Looking at part 1 of 3"  # once the request is under way, its own progress shows
+    assert a.status()["progress"] == "Looking at part 1 of 3"
