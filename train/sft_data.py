@@ -8,6 +8,9 @@ tools instead, and only the turns after the last request are trained (the earlie
 are context, as in the app):
   3. question prompt + [earlier request and answer] + question -> list_files / folder_summary / search_files
   4. ... + the tool call + its result                          -> the answer
+Leftover cleanup records (dataset/make_leftovers.py, "mode": "cleanup") use the leftover prompt and its tools; the
+app makes the inspect_app_folders call itself, so only the last turn is trained:
+  5. leftover prompt + request + inspect_app_folders call + folder facts -> propose_cleanup
 Only the assistant turn is trained (the rest is masked), and the prompt is rendered with the same
 "no thinking" generation prompt the app uses, so training and use see identical text.
 
@@ -19,7 +22,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from assistant.schema import READ_TOOLS, SYSTEM_PROMPT, TOOLS, question_prompt, tool_result  # noqa: E402
+from assistant.schema import (CLEANUP_TOOLS, LEFTOVER_PROMPT, READ_TOOLS, SYSTEM_PROMPT, TOOLS,  # noqa: E402
+                              cleanup_result, question_prompt, tool_result)
 
 IGNORE = -100  # label value the loss skips
 # The key order llama.cpp makes the model use for each change (schema order). The teacher wrote keys
@@ -32,9 +36,13 @@ def is_question(rec: dict) -> bool:
     return rec.get("mode") == "question"
 
 
+def is_cleanup(rec: dict) -> bool:
+    return rec.get("mode") == "cleanup"
+
+
 def tools_for(rec: dict) -> list:
-    """The tools the model sees with this record: the read-only ones for a question."""
-    return READ_TOOLS if is_question(rec) else TOOLS
+    """The tools the model sees with this record: the read-only ones for a question, the cleanup ones for leftovers."""
+    return READ_TOOLS if is_question(rec) else CLEANUP_TOOLS if is_cleanup(rec) else TOOLS
 
 
 def normalize(rec: dict) -> list:
@@ -43,9 +51,15 @@ def normalize(rec: dict) -> list:
     msgs = []
     for m in rec["messages"]:
         m = dict(m)
-        if m["role"] == "system":
+        if m["role"] == "system" and is_cleanup(rec):
+            m["content"] = LEFTOVER_PROMPT
+        elif m["role"] == "system":
             m["content"] = question_prompt(rec.get("meta", {}).get("last_folder")) if is_question(rec) \
                 else SYSTEM_PROMPT
+        elif m["role"] == "tool" and is_cleanup(rec):
+            facts = json.loads(m["content"])
+            m["content"] = cleanup_result(facts["folders"], facts.get("only_app", ""))
+            m.pop("tool_name", None)
         elif m["role"] == "tool" and is_question(rec):
             m.pop("tool_name", None)
         elif m["role"] == "tool":
@@ -74,6 +88,8 @@ def examples(rec: dict) -> list:
     first = 2
     if is_question(rec):  # a follow-up's earlier answer is context, not something to learn
         first = max(i for i, m in enumerate(msgs) if m["role"] == "user") + 1
+    if is_cleanup(rec):  # the app writes the inspect_app_folders call itself
+        first = max(i for i, m in enumerate(msgs) if m["role"] == "tool") + 1
     return [(msgs[:i], m) for i, m in enumerate(msgs) if m["role"] == "assistant" and i >= first]
 
 
@@ -130,6 +146,7 @@ def build(path, tokenizer, apply_template, max_len: int = 6144) -> tuple:
 if __name__ == "__main__":
     recs = [json.loads(line) for line in open(sys.argv[1], encoding="utf-8") if line.strip()]
     n = sum(len(examples(r)) for r in recs)
-    q = sum(is_question(r) for r in recs)
-    print(f"{len(recs)} records ({q} questions) -> {n} training examples "
-          f"({len(TOOLS)} tools in an organizing prompt, {len(READ_TOOLS)} in a question prompt)")
+    q, c = sum(is_question(r) for r in recs), sum(is_cleanup(r) for r in recs)
+    print(f"{len(recs)} records ({q} questions, {c} leftover cleanups) -> {n} training examples "
+          f"({len(TOOLS)} tools in an organizing prompt, {len(READ_TOOLS)} in a question prompt, "
+          f"{len(CLEANUP_TOOLS)} in a cleanup prompt)")

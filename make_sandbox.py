@@ -2,7 +2,9 @@
 
     python make_sandbox.py            # creates sandbox/Downloads, sandbox/Downloads/New folder1, sandbox/Desktop,
                                       # sandbox/Archive (a big folder: 160 files for bulk jobs and search),
-                                      # and empty sandbox/Documents and sandbox/Pictures to move files into
+                                      # empty sandbox/Documents and sandbox/Pictures to move files into, and
+                                      # sandbox/AppData + dot-folders with app leftovers (installed.json says
+                                      # which programs this fake PC has; APPS says what each folder really is)
     python cli.py --base sandbox      # then 'Downloads' means sandbox/Downloads
 
 Run it again any time to reset the sandbox.
@@ -136,6 +138,70 @@ def archive_files() -> list:
     return out
 
 
+K = 1024
+# Leftovers of uninstalled apps: (app folder, [(file inside, bytes, age in days)], what it really is).
+# What it is: leftover, cache, ask (the user's own files), keep (an installed program's) or never (Windows').
+# bench/leftovers.py scores the model against it.
+APPS = [
+    ("AppData/Roaming/ollama app.exe", [("config.json", 2 * K, 3), ("app.log", 40 * K, 1)], "leftover"),
+    ("AppData/Local/Ollama", [("server.log", 300 * K, 2), ("upgrade.log", 8 * K, 30)], "leftover"),
+    (".ollama", [("id_ed25519.pub", 100, 90), ("models/blobs/sha256-6a0746a1", 900 * K, 40),
+                 ("models/manifests/registry/library/qwen3.5/4b", 1 * K, 40)], "leftover"),
+    ("AppData/Local/Docker", [("wsl/disk/docker_data.vhdx", 1500 * K, 95), ("log/host/com.docker.backend.log", 60 * K, 95)],
+     "leftover"),
+    ("AppData/Roaming/Docker", [("settings-store.json", 3 * K, 95)], "leftover"),
+    ("AppData/Local/Origin", [("Origin/local.xml", 4 * K, 420), ("Logs/Client_Log.txt", 70 * K, 420)], "leftover"),
+    ("AppData/Local/Razer", [("Synapse3/Log/Razer Synapse 3.log", 120 * K, 300), ("Synapse3/Settings/config.json", 2 * K, 300)],
+     "leftover"),
+    ("AppData/Roaming/Wireshark", [("preferences", 6 * K, 510), ("recent_common", 2 * K, 510)], "leftover"),
+    ("AppData/Local/Overwolf", [("Log/OverwolfLauncher.log", 30 * K, 130), ("Extensions/x/manifest.json", 3 * K, 130)],
+     "leftover"),
+    ("AppData/Local/QuickNote", [("settings.ini", 1 * K, 4), ("logs/today.log", 9 * K, 4)], "leftover"),  # recent
+    ("AppData/Roaming/EldenRing", [("76561198000000000/ER0000.sl2", 600 * K, 200), ("GraphicsConfig.xml", 2 * K, 200)],
+     "ask"),
+    (".minecraft", [("saves/World1/level.dat", 50 * K, 150), ("options.txt", 4 * K, 150)], "ask"),
+    ("AppData/Local/Discord", [("app-1.0.9/Discord.exe", 700 * K, 6), ("settings.json", 1 * K, 1)], "keep"),
+    ("AppData/Roaming/discord", [("Cache/Cache_Data/data_1", 400 * K, 1), ("Code Cache/js/index", 200 * K, 1),
+                                 ("settings.json", 1 * K, 2)], "cache"),
+    ("AppData/Local/npm-cache", [("_cacache/content-v2/sha512/ab/cd", 500 * K, 20), ("_logs/debug-0.log", 10 * K, 20)],
+     "cache"),
+    ("AppData/Local/pip", [("cache/http-v2/a/b/c", 300 * K, 12)], "cache"),
+    ("AppData/Roaming/Code", [("User/settings.json", 2 * K, 3), ("Cache/Cache_Data/f_000001", 100 * K, 3)], "keep"),
+    (".vscode", [("extensions/ms-python.python-2026.1.0/package.json", 20 * K, 15)], "keep"),
+    ("AppData/Local/Steam", [("htmlcache/Cache/data_0", 200 * K, 2)], "keep"),
+    ("AppData/Local/Programs/Microsoft VS Code", [("Code.exe", 900 * K, 30)], "keep"),
+    ("AppData/Local/Microsoft", [("Windows/UsrClass.dat", 300 * K, 0)], "never"),
+    ("AppData/Local/Temp", [("tmp1234.tmp", 50 * K, 1)], "never"),
+]
+INSTALLED = {
+    "programs": [{"name": "Discord", "publisher": "Discord Inc.", "location": "AppData/Local/Discord"},
+                 {"name": "Steam", "publisher": "Valve Corporation", "location": "Program Files (x86)/Steam"},
+                 {"name": "Microsoft Visual Studio Code (User)", "publisher": "Microsoft Corporation",
+                  "location": "AppData/Local/Programs/Microsoft VS Code"},
+                 {"name": "Node.js", "publisher": "Node.js Foundation", "location": "Program Files/nodejs"},
+                 {"name": "Python 3.12.4 (64-bit)", "publisher": "Python Software Foundation"},
+                 {"name": "Git", "publisher": "The Git Development Community"},
+                 {"name": "7-Zip 23.01 (x64)", "publisher": "Igor Pavlov"}],
+    "running": ["AppData/Local/Discord/app-1.0.9/Discord.exe"],
+}
+
+
+def make_apps(root: Path, now: float):
+    import json
+    for folder, files, _ in APPS:
+        for rel, size, age in files:
+            path = root / folder / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(random.randbytes(size))
+            t = now - age * DAY
+            os.utime(path, (t, t))
+    for folder, files, _ in APPS:  # folders get the time of their newest file, as on a real PC
+        newest = now - min(age for _, _, age in files) * DAY
+        for d in sorted({(root / folder / rel).parent for rel, _, _ in files} | {root / folder}, key=lambda p: -len(p.parts)):
+            os.utime(d, (newest, newest))
+    (root / "installed.json").write_text(json.dumps(INSTALLED, indent=1), encoding="utf-8")
+
+
 def main():
     if ROOT.exists():
         shutil.rmtree(ROOT)
@@ -159,7 +225,8 @@ def main():
         os.utime(path, (t, t))
     for empty in ("Documents", "Pictures"):
         (ROOT / empty).mkdir()
-    print(f"Created {len(FILES) + len(archive_files())} files under {ROOT.resolve()}")
+    make_apps(ROOT, now)
+    print(f"Created {len(FILES) + len(archive_files())} files and {len(APPS)} app folders under {ROOT.resolve()}")
 
 
 if __name__ == "__main__":

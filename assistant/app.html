@@ -198,6 +198,11 @@ body.fa { min-height: 100vh; display: flex; flex-direction: column; }
 .fv-done .log { display: block; font-size: 13px; line-height: 18px; color: var(--text-muted); overflow-wrap: anywhere; }
 .fv-note { padding: 10px var(--space-4); border: 1px dashed var(--line-strong); border-radius: var(--radius-md); font-size: 14px; line-height: 20px; overflow-wrap: anywhere; }
 .fv-note:empty { display: none; }
+
+/* leftover cleanup: one section per kind of folder */
+.fv-sec { padding: 10px var(--space-4) 2px; font-size: 13px; line-height: 18px; font-weight: 600; color: var(--text-muted); }
+.fv-sec + .fv-list, .fv-list + .fv-sec { border-top: 1px solid var(--line); }
+.fv-look { font-size: 13px; line-height: 18px; color: var(--delete); overflow-wrap: anywhere; }
 .fv-note b { font-weight: 600; }
 
 @media (max-width: 820px) {
@@ -317,7 +322,9 @@ function home() {
     info?.runtime?.error ? el("div", { class: "fv-note", role: "alert" }, "The model didn’t start: " + info.runtime.error.replace(/\.$/, "") +
       ". Your next request tries again.") : null,
     info ? el("p", { class: "fa-small fa-muted", style: "margin:0" }, "Model: " + info.model + " (",
-      el("span", { id: "model-state" }, modelState()), ") · Folders under: " + info.base + " · Deletes go to the Recycle Bin.") : null);
+      el("span", { id: "model-state" }, modelState()), ") · Folders under: " + info.base + " · Deletes go to the Recycle Bin." +
+      (info.quarantine_mb ? " · App folders you cleaned up: " + size(info.quarantine_mb * 1024) + ", deleted for good " +
+        info.quarantine_days + " days after the cleanup." : "")) : null);
 }
 // The app starts the model when it opens and closes it when it quits: show whether it is loaded yet.
 function modelState() {
@@ -414,6 +421,7 @@ function result(r) {
   if (r.kind === "explain") return show(head("Here’s what’s in " + lastPart(r.folder), "Nothing on disk has changed."),
     say("Assistant", r.text, r.folder, seconds), newRequest());
   if (r.kind === "search") return searchView(r, seconds);
+  if (r.kind === "cleanup") return cleanupView(r, seconds);
   if (!r.steps.length && !r.blocked.length) return show(head("No changes to make", "Nothing on disk has changed."),
     r.text ? say("Assistant", r.text, r.folder, seconds) : null, newRequest());
   planView(r, seconds);
@@ -759,6 +767,100 @@ function searchView(r, seconds) {
     el("div", { class: "fv-actions" }, summary, delBtn, target, moveBtn));
 }
 
+// ---- leftovers of uninstalled apps: one row per app folder, in sections by what the model said it is
+function cleanupView(r, seconds) {
+  if (!r.steps.length && !r.blocked.length) return show(head("No leftovers found", "Nothing on disk has changed."),
+    say("Assistant", r.text, "", seconds), newRequest());
+  const days = r.quarantine_days;
+  const on = new Set(r.steps.filter(s => s.checked).map(s => s.i));
+  const note = el("div", { class: "fv-note", role: "alert" });
+  const actions = el("div", { class: "fv-actions" });
+  const ago = d => d === 0 ? "changed today" : d === 1 ? "changed yesterday" : d < 60 ? "changed " + d + " days ago" :
+    d < 730 ? "changed " + Math.round(d / 30) + " months ago" : "changed " + Math.round(d / 365) + " years ago";
+  const boxes = [];
+  const top = head("Leftovers of uninstalled apps", "Nothing on disk has changed yet.");
+  const row = s => {
+    const box = el("input", { type: "checkbox", class: "fa-check", "aria-label": "Clean up " + s.folder,
+      onchange: e => { e.target.checked ? on.add(s.i) : on.delete(s.i); update(); } });
+    box.checked = on.has(s.i);
+    boxes.push(box);
+    return el("li", {}, el("label", { class: "fv-row fv-res" }, box, icon("folder", 22),
+      el("span", { class: "body" }, el("span", { class: "nm", title: s.folder }, s.folder),
+        el("span", { class: "meta" }, [s.app, size(s.size_kb), ago(s.last_change_days), s.reason].filter(Boolean).join(" · ")),
+        s.look ? el("span", { class: "fv-look" }, "Look first: " + s.look) : null)));
+  };
+  const SECTIONS = [["leftover", "Leftovers of apps that are gone: the whole folder goes"],
+                    ["cache", "Caches of installed apps: emptied, the folder stays and fills again when needed"],
+                    ["ask", "Check these yourself: unticked"]];
+  const lists = [];
+  for (const [v, title] of SECTIONS) {
+    const rows = r.steps.filter(s => s.verdict === v);
+    if (rows.length) lists.push(el("div", { class: "fv-sec" }, title), el("ul", { class: "fv-list", style: "max-height:none" }, rows.map(row)));
+  }
+  if (r.blocked.length) lists.push(el("div", { class: "fv-sec" }, "Held back by the safety rules"),
+    el("ul", { class: "fv-list", style: "max-height:none" }, r.blocked.map(b => el("li", {},
+      el("div", { class: "fv-row fv-res kept" }, el("span", { class: "spacer" }), icon("folder", 22),
+        el("span", { class: "body" }, el("span", { class: "nm", title: b.file }, b.file),
+          el("span", { class: "meta" }, [b.app, "stays: " + b.why].filter(Boolean).join(" · "))))))));
+  function update(done) {
+    if (done) {
+      actions.className = "fv-done";
+      boxes.forEach(b => { b.disabled = true; });
+      top.querySelector("p").textContent = "Cleaned up. Undo puts the folders back for " + days + " days.";
+      const failed = done.failed.length ? " " + plural(done.failed.length, "folder") + " couldn’t be moved: " +
+        done.failed.map(f => f.folder + " (" + f.why + ")").join(", ") + "." : "";
+      const emptyBtn = el("button", { class: "fa-btn", type: "button" }, "Empty now");
+      let sure = false;
+      emptyBtn.addEventListener("click", async () => {
+        if (busy) return;
+        if (!sure) { sure = true; emptyBtn.textContent = "Delete for good? Click again"; return; }
+        setBusy(true);
+        try {
+          const x = await api("/api/empty");
+          fill(note, x.error ? [el("b", {}, "Not emptied. "), x.error] : [el("b", {}, "Deleted for good: "), size(x.freed_mb * 1024) + ". Undo can’t bring these folders back now."]);
+          emptyBtn.disabled = true;
+        } catch (e) { fill(note, el("b", {}, "The app is not answering. "), e.message); }
+        setBusy(false);
+      });
+      return fill(actions,
+        el("span", { class: "grow" }, el("b", {}, plural(done.moved, "folder") + " (" + size(done.freed_kb) + ") moved to the quarantine."),
+          " They are deleted for good in " + days + " days. Until then Undo puts them back." + failed,
+          el("span", { class: "log", title: done.log }, "Undo log: " + done.log)),
+        el("button", { class: "fa-btn", type: "button", onclick: undo }, "Undo"), emptyBtn,
+        el("button", { class: "fa-btn", type: "button", onclick: () => { home(); input.select(); input.focus(); } }, "New request"));
+    }
+    const picked = r.steps.filter(s => on.has(s.i));
+    const kb = picked.reduce((a, s) => a + s.size_kb, 0);
+    const applyBtn = el("button", { class: "fa-btn primary", type: "button", onclick: apply },
+      picked.length ? "Clean up " + plural(picked.length, "folder") : "Nothing selected");
+    applyBtn.disabled = !picked.length;
+    fill(actions,
+      el("span", { class: "grow" }, picked.length ? [el("b", {}, plural(picked.length, "folder") + " ticked, " + size(kb)),
+        ". They go to a quarantine for " + days + " days first. You can undo."] : "Tick the folders to clean up."),
+      el("button", { class: "fa-btn", type: "button", onclick: () => { if (!busy) home(); } }, "Cancel"), applyBtn);
+    async function apply() {
+      if (busy) return;
+      setBusy(true);
+      applyBtn.disabled = true; applyBtn.textContent = "Moving…";
+      fill(note);
+      try {
+        const x = await api("/api/apply", { selected: [...on] });
+        if (x.error) fill(note, el("b", {}, "Not applied. "), x.error);
+        else { setBusy(false); return update(x); }
+      } catch (e) {
+        fill(note, el("b", {}, "The app is not answering. "), e.message);
+      }
+      setBusy(false);
+      update();
+    }
+  }
+  update();
+  show(top, say("Assistant", r.text, "", seconds),
+    el("section", { class: "fv-win" }, el("div", { class: "fv-bar" }, el("span", { class: "which" }, "App folders")), lists,
+      el("div", { class: "fv-status" }, "Ticked folders are moved to a quarantine in your home folder (.local-assistant), not deleted.")),
+    note, actions);
+}
+
 async function undo() {
   if (busy) return;
   setBusy(true);
@@ -808,7 +910,7 @@ undoBtn.addEventListener("click", undo);
 
 api("/api/info").then(r => {
   info = r;
-  if (r.version !== 3) {  // the window is new but the app running in the background is not
+  if (r.version !== 4) {  // the window is new but the app running in the background is not
     setBusy(true);
     return show(head("Restart the app", "This window was updated, but the app that was already running is the old one. " +
       "Close the black Folder Assistant window (or press Ctrl+C in it), then open Folder Assistant.bat again."));

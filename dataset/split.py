@@ -5,6 +5,7 @@
 All requests about the same folder land in the same split, so the test set only has
 folders the model has never seen. The hand-written seed examples always go to training.
 The question conversations of make_questions.py (dataset/questions.jsonl), when there, go with their folder.
+The leftover cleanups of make_leftovers.py (dataset/leftovers.jsonl), when there, are split by made-up PC.
 Writes dataset/train.jsonl, dataset/val.jsonl, dataset/test.jsonl.
 """
 
@@ -20,6 +21,8 @@ def main(seed=7, val=0.1, test=0.1):
     records = [json.loads(line) for line in open(HERE / "reviewed.jsonl", encoding="utf-8") if line.strip()]
     if (HERE / "questions.jsonl").exists():
         records += [json.loads(line) for line in open(HERE / "questions.jsonl", encoding="utf-8") if line.strip()]
+    if (HERE / "leftovers.jsonl").exists():
+        records += [json.loads(line) for line in open(HERE / "leftovers.jsonl", encoding="utf-8") if line.strip()]
     scenarios = sorted({r["meta"]["scenario_id"] for r in records})
     random.Random(seed).shuffle(scenarios)
     n_test, n_val = round(len(scenarios) * test), round(len(scenarios) * val)

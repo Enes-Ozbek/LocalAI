@@ -11,8 +11,9 @@ information. Every model and library we use allows this use (licences checked on
 | Requests | 4 requests per folder, from templates: organize, explain and organize, organize with a limit ("don't delete"), organize by a rule ("by year"), explain only, one named file (delete, rename, move), move to another folder, unclear folder, and refuse. About 15% contain typos. | `dataset/make_scenarios.py` |
 | Answers | A bigger model (Qwen3.5-9B, the "teacher") writes the explanation and the plan. The answers to unclear-folder and refuse requests are fixed sentences. | `dataset/draft_answers.py` |
 | Checks | Every answer goes through the app's own safety rules plus stricter delete rules: only duplicates, installers, temporary and empty files may be deleted, unless the user named the file. A change that breaks a rule is dropped. The answer is rejected when nothing is left, or when its text talks about a dropped file. | `dataset/validate.py` |
+| Leftover cleanup | Made-up PCs: 10 to 20 real-world apps each (Docker, Ollama, Discord, Steam, games and others), about half installed, and the folders those apps keep in AppData and the home folder, with invented sizes, dates and kinds of files. The facts come from the app's own code; the right answer follows from them by fixed rules (leftover, cache, ask or keep), so no teacher model is used. About a third of the requests name one app. | `dataset/make_leftovers.py` |
 | Hand-written examples | 7 conversations written by the team, always in the training set | `dataset/seed_examples.jsonl` |
-| Split | 80% train, 10% validation, 10% test, by folder. A test folder is never seen in training. | `dataset/split.py` |
+| Split | 80% train, 10% validation, 10% test, by folder (or made-up PC). A test folder is never seen in training. | `dataset/split.py` |
 
 The invented content uses common Turkish first names, real Turkish company names on invented bills (Turkcell,
 Vodafone, IGDAS and others, with made-up amounts) and real course names. The sandbox for manual tests
@@ -28,7 +29,7 @@ or deletes it, or leaves it where it is.
 | --- | --- | --- | --- | --- |
 | r7 | 66 | 7 | 714 files seen in training | Counted from the saved training file |
 | r8 | about 200 | 25 | about 2,000 in training, 197 in testing | Estimate: the training file was not downloaded |
-| r9 | to be filled from `data_stats.md` | | | Goal: over 5,000 file decisions |
+| r9 | to be filled from `data_stats.md` | | | Goal: over 5,000 file decisions, plus about 4,300 folder decisions of the leftover cleanup (300 made-up PCs) |
 
 ## Ethics
 
@@ -36,7 +37,8 @@ or deletes it, or leaves it where it is.
   was considered but not used.
 - **Privacy by design:** the app runs fully on the user's PC. Files, requests and answers never leave it.
 - **Safety:** the model can't change anything on its own. The user sees a preview and confirms first, deletes go
-  to the Recycle Bin, every run can be undone, and system folders are refused.
+  to the Recycle Bin (app folders of a leftover cleanup to a quarantine kept for 7 days), every run can be undone,
+  and system folders are refused.
 - **Known bias:** requests are English only, and the folders follow five kinds of user, mostly Turkish
   university students. Other languages and kinds of users are untested.
 

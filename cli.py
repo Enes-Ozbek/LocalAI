@@ -39,6 +39,9 @@ def main():
             print(r.text)
         for m in r.matches:
             print(f"  {m['path']}  ({m['modified']}, {m['size_kb']} KB)  {m['why']}")
+        if r.kind == "cleanup":
+            cleanup(r)
+            continue
         if r.kind != "proposal":
             continue
         for b in r.blocked:
@@ -50,6 +53,24 @@ def main():
         if input("\nApply these changes? (y/n) ").strip().lower() == "y":
             log = executor.apply(r.steps)
             print(f"Done. Type 'undo' to reverse. (log: {log})")
+
+
+def cleanup(r):
+    """Leftovers of uninstalled apps: only the ticked folders (not the ones to check yourself) go, to the quarantine."""
+    for b in r.blocked:
+        print(f"  HELD BACK {b['folder']}: {b['blocked']}")
+    for s in r.steps:
+        mark = "x" if s["checked"] else " "
+        what = "EMPTY " if s["contents_only"] else "REMOVE"
+        look = f"  (look first: {s['look']})" if s["look"] else ""
+        print(f"  [{mark}] {what} {s['folder']}  {s['size_kb'] / 1024:.1f} MB  - {s['app']}: {s['reason']}{look}")
+    picked = [s for s in r.steps if s["checked"]]
+    if picked and input(f"\nMove the {len(picked)} ticked folder(s) to the quarantine for {executor.QUARANTINE_DAYS} days? "
+                        "(y/n) ").strip().lower() == "y":
+        log, failed = executor.apply_cleanup(picked)
+        for folder, why in failed:
+            print(f"  Not moved: {folder} ({why})")
+        print(f"Done. Type 'undo' to put them back. (log: {log})")
 
 
 if __name__ == "__main__":
